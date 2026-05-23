@@ -18,6 +18,7 @@ set(SPRAY_COMMON_SOURCES
     src/domain/Payloads.cpp
     src/core/DequeueCoordinator.cpp
     src/core/EnqueueWorkflow.cpp
+    src/core/LegacyCameraWorkflow.cpp
     src/core/QueueManager.cpp
     src/diagnostics/EventLog.cpp
     src/io/camera/CameraEndpoint.cpp
@@ -44,6 +45,7 @@ qt_add_executable(spray_tests
     tests/test_camera_protocol.cpp
     tests/test_enqueue_workflow.cpp
     tests/test_fake_robot_loop.cpp
+    tests/test_legacy_camera_workflow.cpp
     tests/test_plc_endpoint.cpp
     tests/test_plc_protocol.cpp
     tests/test_queue_manager.cpp

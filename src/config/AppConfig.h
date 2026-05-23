@@ -26,6 +26,18 @@ enum class CameraFlowMode {
     DualCamera11_12,
 };
 
+enum class CameraCorrelationMode {
+    Sequential,
+    Counted,
+};
+
+enum class CameraCountExtractMode {
+    Auto,
+    Ascii,
+    Binary,
+    Disabled,
+};
+
 struct CameraConfig {
     QString host = QStringLiteral("0.0.0.0");
     quint16 camera2dPort = 9001;
@@ -34,6 +46,8 @@ struct CameraConfig {
     QString legacyHost = QStringLiteral("127.0.0.1");
     quint16 legacyPort = 9001;
     CameraFlowMode flowMode = CameraFlowMode::LegacySingleCamera;
+    CameraCorrelationMode correlationMode = CameraCorrelationMode::Sequential;
+    CameraCountExtractMode countExtractMode = CameraCountExtractMode::Auto;
 };
 
 struct LoggingConfig {

@@ -3,6 +3,7 @@
 #include "test_camera_protocol.h"
 #include "test_enqueue_workflow.h"
 #include "test_fake_robot_loop.h"
+#include "test_legacy_camera_workflow.h"
 #include "test_plc_endpoint.h"
 #include "test_plc_protocol.h"
 #include "test_queue_manager.h"
@@ -39,6 +40,7 @@ int main(int argc, char** argv)
     status |= runTest(createCameraProtocolTest(), QStringLiteral("camera-protocol.txt"));
     status |= runTest(createEnqueueWorkflowTest(), QStringLiteral("enqueue-workflow.txt"));
     status |= runTest(createFakeRobotLoopTest(), QStringLiteral("fake-robot-loop.txt"));
+    status |= runTest(createLegacyCameraWorkflowTest(), QStringLiteral("legacy-camera-workflow.txt"));
     status |= runTest(createPlcEndpointTest(), QStringLiteral("plc-endpoint.txt"));
     status |= runTest(createPlcProtocolTest(), QStringLiteral("plc-protocol.txt"));
     status |= runTest(createQueueManagerTest(), QStringLiteral("queue-manager.txt"));

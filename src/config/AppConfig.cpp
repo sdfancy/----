@@ -57,6 +57,36 @@ CameraFlowMode parseCameraFlowMode(const QString& value, CameraFlowMode fallback
     return fallback;
 }
 
+CameraCorrelationMode parseCameraCorrelationMode(const QString& value, CameraCorrelationMode fallback)
+{
+    const QString lowered = unquote(value).trimmed().toLower();
+    if (lowered == QStringLiteral("sequential")) {
+        return CameraCorrelationMode::Sequential;
+    }
+    if (lowered == QStringLiteral("counted")) {
+        return CameraCorrelationMode::Counted;
+    }
+    return fallback;
+}
+
+CameraCountExtractMode parseCameraCountExtractMode(const QString& value, CameraCountExtractMode fallback)
+{
+    const QString lowered = unquote(value).trimmed().toLower();
+    if (lowered == QStringLiteral("auto")) {
+        return CameraCountExtractMode::Auto;
+    }
+    if (lowered == QStringLiteral("ascii")) {
+        return CameraCountExtractMode::Ascii;
+    }
+    if (lowered == QStringLiteral("binary")) {
+        return CameraCountExtractMode::Binary;
+    }
+    if (lowered == QStringLiteral("disabled")) {
+        return CameraCountExtractMode::Disabled;
+    }
+    return fallback;
+}
+
 } // namespace
 
 AppConfig AppConfig::defaults()
@@ -136,6 +166,10 @@ AppConfig AppConfig::load(const QString& path, QString* errorMessage)
                 config.camera.legacyPort = static_cast<quint16>(parseInt(value, config.camera.legacyPort));
             } else if (key == QStringLiteral("flow_mode")) {
                 config.camera.flowMode = parseCameraFlowMode(value, config.camera.flowMode);
+            } else if (key == QStringLiteral("camera_correlation_mode")) {
+                config.camera.correlationMode = parseCameraCorrelationMode(value, config.camera.correlationMode);
+            } else if (key == QStringLiteral("camera_count_extract_mode")) {
+                config.camera.countExtractMode = parseCameraCountExtractMode(value, config.camera.countExtractMode);
             }
         } else if (section == QStringLiteral("logging")) {
             if (key == QStringLiteral("raw_frames")) {

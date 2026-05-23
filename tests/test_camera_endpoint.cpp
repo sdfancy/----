@@ -87,6 +87,26 @@ private slots:
         QCOMPARE(payloadSpy.at(0).at(0).toString(), QStringLiteral("legacy"));
         QCOMPARE(payloadSpy.at(0).at(1).toByteArray(), QByteArray("COUNT:10"));
     }
+
+    void legacyModeDoesNotListenOnDualPorts()
+    {
+        QTcpServer cameraServer;
+        QVERIFY(cameraServer.listen(QHostAddress::LocalHost, 0));
+
+        spray::config::CameraConfig config;
+        config.legacyHost = QStringLiteral("127.0.0.1");
+        config.legacyPort = cameraServer.serverPort();
+        config.camera2dPort = 0;
+        config.camera3dPort = 0;
+        config.camera3dEnabled = true;
+        config.flowMode = CameraFlowMode::LegacySingleCamera;
+
+        CameraEndpoint endpoint(config);
+        QString error;
+        QVERIFY2(endpoint.start(&error), qPrintable(error));
+        QCOMPARE(endpoint.listeningPort(QStringLiteral("2d")), 0);
+        QCOMPARE(endpoint.listeningPort(QStringLiteral("3d")), 0);
+    }
 };
 
 QObject* createCameraEndpointTest()

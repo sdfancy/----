@@ -20,6 +20,8 @@ camera3d_enabled = false
 legacy_host = "127.0.0.1"
 legacy_port = 9001
 flow_mode = "legacy_single_camera"
+camera_correlation_mode = "sequential"
+camera_count_extract_mode = "auto"
 
 [logging]
 raw_frames = true

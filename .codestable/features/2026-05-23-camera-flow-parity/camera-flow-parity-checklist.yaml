@@ -22,7 +22,7 @@ steps:
     exit_signal: 集成测试复现 11 -> READY -> 12 -> 3D -> Done，覆盖 fallback、晚到 2D、重复 READY。
   - id: step-5-legacy-single-camera
     title: legacy 单相机 parity
-    status: pending
+    status: done
     exit_signal: legacy 单相机测试覆盖触发、回包写队列、sequential 与 counted 匹配，且不启动 9001/9002。
   - id: step-6-application-integration
     title: 应用集成、日志与运行快照
