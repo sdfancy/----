@@ -21,6 +21,21 @@ struct FakeRobotConfig {
     int finishDelayMs = 80;
 };
 
+enum class CameraFlowMode {
+    LegacySingleCamera,
+    DualCamera11_12,
+};
+
+struct CameraConfig {
+    QString host = QStringLiteral("0.0.0.0");
+    quint16 camera2dPort = 9001;
+    quint16 camera3dPort = 9002;
+    bool camera3dEnabled = false;
+    QString legacyHost = QStringLiteral("127.0.0.1");
+    quint16 legacyPort = 9001;
+    CameraFlowMode flowMode = CameraFlowMode::LegacySingleCamera;
+};
+
 struct LoggingConfig {
     bool rawFrames = true;
 };
@@ -29,6 +44,7 @@ struct AppConfig {
     PlcConfig plc;
     QueueConfig queue;
     FakeRobotConfig fakeRobot;
+    CameraConfig camera;
     LoggingConfig logging;
 
     static AppConfig defaults();

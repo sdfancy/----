@@ -14,7 +14,7 @@ steps:
     exit_signal: 协议测试覆盖 READY、CSV result、括号 E segment、3D 半包、多帧和非法 segment。
   - id: step-3-camera-endpoint
     title: CameraEndpoint 通讯骨架
-    status: pending
+    status: done
     exit_signal: 模拟相机可连接 dual 2D/3D 端口并收发 payload，legacy client 可按配置连接和发送触发。
   - id: step-4-dual-enqueue-workflow
     title: dual camera 11/12 入队状态机

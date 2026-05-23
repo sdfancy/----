@@ -19,6 +19,7 @@ set(SPRAY_COMMON_SOURCES
     src/core/DequeueCoordinator.cpp
     src/core/QueueManager.cpp
     src/diagnostics/EventLog.cpp
+    src/io/camera/CameraEndpoint.cpp
     src/io/plc/PlcEndpoint.cpp
     src/protocol/ByteCodec.cpp
     src/protocol/CameraProtocol.cpp
@@ -38,6 +39,7 @@ set_target_properties(spray_control PROPERTIES WIN32_EXECUTABLE FALSE)
 qt_add_executable(spray_tests
     tests/test_main.cpp
     tests/test_application_loop.cpp
+    tests/test_camera_endpoint.cpp
     tests/test_camera_protocol.cpp
     tests/test_fake_robot_loop.cpp
     tests/test_plc_endpoint.cpp

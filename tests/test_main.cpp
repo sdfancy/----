@@ -1,4 +1,5 @@
 #include "test_application_loop.h"
+#include "test_camera_endpoint.h"
 #include "test_camera_protocol.h"
 #include "test_fake_robot_loop.h"
 #include "test_plc_endpoint.h"
@@ -33,6 +34,7 @@ int main(int argc, char** argv)
     int status = 0;
 
     status |= runTest(createApplicationLoopTest(), QStringLiteral("application-loop.txt"));
+    status |= runTest(createCameraEndpointTest(), QStringLiteral("camera-endpoint.txt"));
     status |= runTest(createCameraProtocolTest(), QStringLiteral("camera-protocol.txt"));
     status |= runTest(createFakeRobotLoopTest(), QStringLiteral("fake-robot-loop.txt"));
     status |= runTest(createPlcEndpointTest(), QStringLiteral("plc-endpoint.txt"));

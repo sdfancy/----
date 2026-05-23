@@ -12,5 +12,14 @@ enabled = true
 accept_delay_ms = 20
 finish_delay_ms = 80
 
+[camera]
+host = "0.0.0.0"
+camera2d_port = 9001
+camera3d_port = 9002
+camera3d_enabled = false
+legacy_host = "127.0.0.1"
+legacy_port = 9001
+flow_mode = "legacy_single_camera"
+
 [logging]
 raw_frames = true

@@ -45,6 +45,18 @@ int parseInt(const QString& value, int fallback)
     return ok ? parsed : fallback;
 }
 
+CameraFlowMode parseCameraFlowMode(const QString& value, CameraFlowMode fallback)
+{
+    const QString lowered = unquote(value).trimmed().toLower();
+    if (lowered == QStringLiteral("legacy_single_camera")) {
+        return CameraFlowMode::LegacySingleCamera;
+    }
+    if (lowered == QStringLiteral("dual_camera_11_12")) {
+        return CameraFlowMode::DualCamera11_12;
+    }
+    return fallback;
+}
+
 } // namespace
 
 AppConfig AppConfig::defaults()
@@ -109,6 +121,22 @@ AppConfig AppConfig::load(const QString& path, QString* errorMessage)
             } else if (key == QStringLiteral("finish_delay_ms")) {
                 config.fakeRobot.finishDelayMs = parseInt(value, config.fakeRobot.finishDelayMs);
             }
+        } else if (section == QStringLiteral("camera")) {
+            if (key == QStringLiteral("host")) {
+                config.camera.host = unquote(value);
+            } else if (key == QStringLiteral("camera2d_port")) {
+                config.camera.camera2dPort = static_cast<quint16>(parseInt(value, config.camera.camera2dPort));
+            } else if (key == QStringLiteral("camera3d_port")) {
+                config.camera.camera3dPort = static_cast<quint16>(parseInt(value, config.camera.camera3dPort));
+            } else if (key == QStringLiteral("camera3d_enabled")) {
+                config.camera.camera3dEnabled = parseBool(value, config.camera.camera3dEnabled);
+            } else if (key == QStringLiteral("legacy_host")) {
+                config.camera.legacyHost = unquote(value);
+            } else if (key == QStringLiteral("legacy_port")) {
+                config.camera.legacyPort = static_cast<quint16>(parseInt(value, config.camera.legacyPort));
+            } else if (key == QStringLiteral("flow_mode")) {
+                config.camera.flowMode = parseCameraFlowMode(value, config.camera.flowMode);
+            }
         } else if (section == QStringLiteral("logging")) {
             if (key == QStringLiteral("raw_frames")) {
                 config.logging.rawFrames = parseBool(value, config.logging.rawFrames);
@@ -136,6 +164,19 @@ bool AppConfig::validate(QString* errorMessage) const
     if (fakeRobot.acceptDelayMs < 0 || fakeRobot.finishDelayMs < 0) {
         if (errorMessage) {
             *errorMessage = QStringLiteral("fake robot delays must be >= 0");
+        }
+        return false;
+    }
+    if (camera.camera2dPort == 0 || camera.legacyPort == 0) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("camera ports must be non-zero");
+        }
+        return false;
+    }
+    if (camera.camera3dEnabled
+        && (camera.camera3dPort == 0 || camera.camera3dPort == camera.camera2dPort)) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("camera 2D/3D ports must be non-zero and different");
         }
         return false;
     }
