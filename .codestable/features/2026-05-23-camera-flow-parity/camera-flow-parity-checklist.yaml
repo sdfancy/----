@@ -10,7 +10,7 @@ steps:
     exit_signal: Application::wireEvents 拆成 PLC 入队、PLC 出队、诊断事件几个私有函数，现有 spray_tests 全绿，行为零变化。
   - id: step-2-camera-protocol
     title: 相机协议解析与截帧
-    status: pending
+    status: done
     exit_signal: 协议测试覆盖 READY、CSV result、括号 E segment、3D 半包、多帧和非法 segment。
   - id: step-3-camera-endpoint
     title: CameraEndpoint 通讯骨架
