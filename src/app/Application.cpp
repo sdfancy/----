@@ -82,6 +82,14 @@ QList<diagnostics::EventRecord> Application::events() const
 
 void Application::wireEvents()
 {
+    wireDiagnosticEvents();
+    wirePlcEnqueueEvents();
+    wirePlcDequeueEvents();
+    wireDequeueCoordinatorEvents();
+}
+
+void Application::wireDiagnosticEvents()
+{
     connect(plcEndpoint_.get(), &io::PlcEndpoint::rawFrame, this,
             [this](const QString& channel, const QString& direction, const QByteArray& bytes) {
                 eventLog_.append(
@@ -95,7 +103,10 @@ void Application::wireEvents()
                 eventLog_.append(QStringLiteral("WARN"), QStringLiteral("plc"), message);
                 qWarning().noquote() << message;
             });
+}
 
+void Application::wirePlcEnqueueEvents()
+{
     connect(plcEndpoint_.get(), &io::PlcEndpoint::enqueueFrameReceived, this,
             [this](const QByteArray& bytes) {
                 const auto parsed = protocol::parseEnqueueFrame(bytes);
@@ -110,7 +121,10 @@ void Application::wireEvents()
                     QStringLiteral("queue.enqueue"),
                     QStringLiteral("count=%1 pointer=%2").arg(parsed.value->count).arg(parsed.value->pointer));
             });
+}
 
+void Application::wirePlcDequeueEvents()
+{
     connect(plcEndpoint_.get(), &io::PlcEndpoint::dequeueFrameReceived, this,
             [this](const QByteArray& bytes) {
                 const auto parsed = protocol::parseDequeueFrame(bytes);
@@ -127,7 +141,10 @@ void Application::wireEvents()
                         .arg(parsed.value->arm1Pointer)
                         .arg(parsed.value->arm2Pointer));
             });
+}
 
+void Application::wireDequeueCoordinatorEvents()
+{
     connect(dequeueCoordinator_.get(), &core::DequeueCoordinator::taskDispatched, this,
             [this](const core::RobotTask& task) {
                 eventLog_.append(

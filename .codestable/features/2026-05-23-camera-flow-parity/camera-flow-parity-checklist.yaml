@@ -6,7 +6,7 @@ status: active
 steps:
   - id: step-1-application-wiring-refactor
     title: Application 通讯 wiring 结构微重构
-    status: pending
+    status: done
     exit_signal: Application::wireEvents 拆成 PLC 入队、PLC 出队、诊断事件几个私有函数，现有 spray_tests 全绿，行为零变化。
   - id: step-2-camera-protocol
     title: 相机协议解析与截帧

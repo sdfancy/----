@@ -26,6 +26,10 @@ public:
 
 private:
     void wireEvents();
+    void wireDiagnosticEvents();
+    void wirePlcEnqueueEvents();
+    void wirePlcDequeueEvents();
+    void wireDequeueCoordinatorEvents();
 
     config::AppConfig config_;
     bool simulateRobot_ = false;
