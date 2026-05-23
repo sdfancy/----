@@ -13,8 +13,8 @@ items:
   - slug: camera-flow-parity
     description: 复刻 legacy 单相机和 dual camera 入队流程，保证相机触发、入队和默认值策略与旧项目一致
     depends_on: [cpp-minimal-loop]
-    status: planned
-    feature: null
+    status: in-progress
+    feature: 2026-05-23-camera-flow-parity
     minimal_loop: false
     notes: null
 
