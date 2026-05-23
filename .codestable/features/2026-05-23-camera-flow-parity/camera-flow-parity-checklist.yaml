@@ -18,7 +18,7 @@ steps:
     exit_signal: 模拟相机可连接 dual 2D/3D 端口并收发 payload，legacy client 可按配置连接和发送触发。
   - id: step-4-dual-enqueue-workflow
     title: dual camera 11/12 入队状态机
-    status: pending
+    status: done
     exit_signal: 集成测试复现 11 -> READY -> 12 -> 3D -> Done，覆盖 fallback、晚到 2D、重复 READY。
   - id: step-5-legacy-single-camera
     title: legacy 单相机 parity
