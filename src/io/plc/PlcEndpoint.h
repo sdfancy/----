@@ -17,6 +17,7 @@ public:
 
     bool start(QString* errorMessage = nullptr);
     void stop();
+    bool sendEnqueueFeedback(const QByteArray& bytes);
     bool sendDequeueFeedback(const QByteArray& bytes);
     int enqueueConnectionCount() const;
     int dequeueConnectionCount() const;
@@ -30,6 +31,10 @@ signals:
 private:
     void wireServer(QTcpServer& server, QList<QTcpSocket*>& sockets, const QString& channel);
     void removeSocket(QList<QTcpSocket*>& sockets, QTcpSocket* socket);
+    bool sendFeedback(QList<QTcpSocket*>& sockets,
+                      const QString& channel,
+                      const QByteArray& bytes,
+                      const QString& missingConnectionMessage);
 
     config::PlcConfig config_;
     QTcpServer enqueueServer_;

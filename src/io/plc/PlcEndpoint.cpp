@@ -45,16 +45,20 @@ void PlcEndpoint::stop()
 
 bool PlcEndpoint::sendDequeueFeedback(const QByteArray& bytes)
 {
-    if (dequeueSockets_.isEmpty()) {
-        emit warning(QStringLiteral("dequeue feedback has no active 9090 connection"));
-        return false;
-    }
+    return sendFeedback(
+        dequeueSockets_,
+        QStringLiteral("dequeue"),
+        bytes,
+        QStringLiteral("dequeue feedback has no active 9090 connection"));
+}
 
-    QTcpSocket* socket = dequeueSockets_.last();
-    const qint64 written = socket->write(bytes);
-    socket->flush();
-    emit rawFrame(QStringLiteral("dequeue"), QStringLiteral("tx"), bytes);
-    return written == bytes.size();
+bool PlcEndpoint::sendEnqueueFeedback(const QByteArray& bytes)
+{
+    return sendFeedback(
+        enqueueSockets_,
+        QStringLiteral("enqueue"),
+        bytes,
+        QStringLiteral("enqueue feedback has no active 9999 connection"));
 }
 
 int PlcEndpoint::enqueueConnectionCount() const
@@ -69,9 +73,9 @@ int PlcEndpoint::dequeueConnectionCount() const
 
 void PlcEndpoint::wireServer(QTcpServer& server, QList<QTcpSocket*>& sockets, const QString& channel)
 {
-    connect(&server, &QTcpServer::newConnection, this, [this, &server, &sockets, channel]() {
+    connect(&server, &QTcpServer::newConnection, this, [this, &server, socketsPtr = &sockets, channel]() {
         while (QTcpSocket* socket = server.nextPendingConnection()) {
-            sockets.append(socket);
+            socketsPtr->append(socket);
             connect(socket, &QTcpSocket::readyRead, this, [this, socket, channel]() {
                 const QByteArray bytes = socket->readAll();
                 emit rawFrame(channel, QStringLiteral("rx"), bytes);
@@ -81,8 +85,8 @@ void PlcEndpoint::wireServer(QTcpServer& server, QList<QTcpSocket*>& sockets, co
                     emit dequeueFrameReceived(bytes);
                 }
             });
-            connect(socket, &QTcpSocket::disconnected, this, [this, &sockets, socket]() {
-                removeSocket(sockets, socket);
+            connect(socket, &QTcpSocket::disconnected, this, [this, socketsPtr, socket]() {
+                removeSocket(*socketsPtr, socket);
                 socket->deleteLater();
             });
         }
@@ -92,6 +96,23 @@ void PlcEndpoint::wireServer(QTcpServer& server, QList<QTcpSocket*>& sockets, co
 void PlcEndpoint::removeSocket(QList<QTcpSocket*>& sockets, QTcpSocket* socket)
 {
     sockets.removeAll(socket);
+}
+
+bool PlcEndpoint::sendFeedback(QList<QTcpSocket*>& sockets,
+                               const QString& channel,
+                               const QByteArray& bytes,
+                               const QString& missingConnectionMessage)
+{
+    if (sockets.isEmpty()) {
+        emit warning(missingConnectionMessage);
+        return false;
+    }
+
+    QTcpSocket* socket = sockets.last();
+    const qint64 written = socket->write(bytes);
+    socket->flush();
+    emit rawFrame(channel, QStringLiteral("tx"), bytes);
+    return written == bytes.size();
 }
 
 } // namespace spray::io

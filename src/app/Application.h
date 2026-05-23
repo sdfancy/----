@@ -2,8 +2,11 @@
 
 #include "config/AppConfig.h"
 #include "core/DequeueCoordinator.h"
+#include "core/EnqueueWorkflow.h"
+#include "core/LegacyCameraWorkflow.h"
 #include "core/QueueManager.h"
 #include "diagnostics/EventLog.h"
+#include "io/camera/CameraEndpoint.h"
 #include "io/plc/PlcEndpoint.h"
 #include "robot/FakeRobotController.h"
 
@@ -30,13 +33,19 @@ private:
     void wirePlcEnqueueEvents();
     void wirePlcDequeueEvents();
     void wireDequeueCoordinatorEvents();
+    void wireCameraEvents();
+    void wireWorkflowEvents();
+    void handlePlcEnqueueFrame(const QByteArray& bytes);
 
     config::AppConfig config_;
     bool simulateRobot_ = false;
     std::unique_ptr<core::QueueManager> queueManager_;
     std::unique_ptr<io::PlcEndpoint> plcEndpoint_;
+    std::unique_ptr<io::CameraEndpoint> cameraEndpoint_;
     std::unique_ptr<robot::FakeRobotController> fakeRobot_;
     std::unique_ptr<core::DequeueCoordinator> dequeueCoordinator_;
+    std::unique_ptr<core::EnqueueWorkflow> enqueueWorkflow_;
+    std::unique_ptr<core::LegacyCameraWorkflow> legacyCameraWorkflow_;
     diagnostics::EventLog eventLog_;
 };
 
