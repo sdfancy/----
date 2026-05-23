@@ -1,0 +1,17 @@
+build/
+__pycache__/
+*.pyc
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+*.user
+*.exe
+*.dll
+*.obj
+*.pdb
+*.ilk
+*.log
+test-output/
+out.txt
+test_result.txt

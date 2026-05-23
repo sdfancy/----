@@ -1,0 +1,75 @@
+roadmap: cpp-spray-control
+created: 2026-05-23
+
+items:
+  - slug: cpp-minimal-loop
+    description: CMake/Qt 项目骨架、PLC 双端口、队列核心、fake robot 执行器，跑通指针到 XN/XD 的最小闭环
+    depends_on: []
+    status: done
+    feature: 2026-05-23-cpp-minimal-loop
+    minimal_loop: true
+    notes: 保留 PLC 9999/9090 外部协议，fake robot 用于先验证主控闭环
+
+  - slug: camera-flow-parity
+    description: 复刻 legacy 单相机和 dual camera 入队流程，保证相机触发、入队和默认值策略与旧项目一致
+    depends_on: [cpp-minimal-loop]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: null
+
+  - slug: duco-sdk-adapter
+    description: 封装 DUCO C++ 远程 API，完成连接、心跳、上电使能、状态读取和任务控制
+    depends_on: [cpp-minimal-loop]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: 需要现场 SDK include/lib 和控制器版本
+
+  - slug: duco-task-executor
+    description: 将队列 payload 转成喷涂任务并调用 DUCO 运动接口执行，按开始和完成回 XN/XD
+    depends_on: [camera-flow-parity, duco-sdk-adapter]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: null
+
+  - slug: qt-hmi-shell
+    description: Qt Widgets HMI 页面、表格模型、设备状态和手动操作命令设计落地
+    depends_on: [cpp-minimal-loop]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: 本 roadmap 只给界面方案，代码由后续 feature 或人工实现
+
+  - slug: modbus-plc-reservation
+    description: Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留
+    depends_on: [cpp-minimal-loop]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: 默认禁用，不改变现有 PLC TCP 主流程
+
+  - slug: diagnostics-and-logs
+    description: 原始通讯日志、事件历史、健康检查、错误码和测试模拟器
+    depends_on: [cpp-minimal-loop, camera-flow-parity]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: null
+
+  - slug: field-config-and-recipes
+    description: 现场配置、机械臂 recipe、点位字段映射、喷枪 IO 和速度参数
+    depends_on: [duco-task-executor]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: 需要现场确认相机 payload 字段含义和喷枪 IO 接线
+
+  - slug: hardware-acceptance
+    description: 真实 PLC、相机、新松机械臂联调验收脚本和现场 checklist
+    depends_on: [duco-task-executor, qt-hmi-shell, diagnostics-and-logs, field-config-and-recipes]
+    status: planned
+    feature: null
+    minimal_loop: false
+    notes: null

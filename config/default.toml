@@ -1,0 +1,16 @@
+[plc]
+host = "0.0.0.0"
+enqueue_port = 9999
+dequeue_port = 9090
+
+[queue]
+prefetch_offset = 0
+max_items_per_arm = 128
+
+[fake_robot]
+enabled = true
+accept_delay_ms = 20
+finish_delay_ms = 80
+
+[logging]
+raw_frames = true

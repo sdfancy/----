@@ -1,0 +1,64 @@
+feature: 2026-05-23-cpp-minimal-loop
+design: cpp-minimal-loop-design.md
+created: 2026-05-23
+status: active
+
+steps:
+  - id: step-1-project-skeleton
+    title: CMake/Qt Core headless 项目骨架
+    status: done
+    exit_signal: 程序可用 --headless --simulate-robot 启动，并打印配置与 9999/9090 监听目标。
+  - id: step-2-plc-protocol
+    title: PLC 入队/出队协议解析与反馈编码
+    status: done
+    exit_signal: 协议测试覆盖合法入队帧、合法出队帧、非法长度和 1N/1D/2N/2D 编码。
+  - id: step-3-queue-core
+    title: 双臂队列、出队指针变化和缓存准备
+    status: done
+    exit_signal: 队列测试覆盖成对入队、arm1/arm2 独立出队、重复指针不重复触发、空指针跳过和默认 payload。
+  - id: step-4-plc-tcp-endpoints
+    title: Qt TCP PLC 双端口通讯骨架
+    status: done
+    exit_signal: 模拟 PLC 可连接 9999/9090，程序记录 raw frame，并能在 9090 当前连接发送反馈 bytes。
+  - id: step-5-fake-robot-loop
+    title: fake robot accepted/finished 编排闭环
+    status: done
+    exit_signal: 出队缓存可转成 RobotTask，fake robot 依次产生 accepted/finished，并驱动 PLC 收到 1N -> 1D。
+  - id: step-6-observability-snapshot
+    title: 最小日志、事件历史和运行快照
+    status: done
+    exit_signal: 一次闭环可按 count/pointer 在日志和 snapshot 中追踪到入队、出队、accepted、finished、反馈发送。
+
+checks:
+  - id: check-no-duco
+    title: 最小闭环不接 DUCO SDK
+    status: passed
+    source: design 3 明确不做
+  - id: check-no-widgets
+    title: 最小闭环不创建 Qt Widgets 窗口类
+    status: passed
+    source: design 3 明确不做
+  - id: check-no-camera-modbus
+    title: 最小闭环不启动相机端口且不调用 QModbusTcpClient
+    status: passed
+    source: design 3 明确不做
+  - id: check-plc-frame-contract
+    title: PLC 9999/9090 报文字段顺序和反馈码不变
+    status: passed
+    source: design 2.1 和 3
+  - id: check-pointer-idempotency
+    title: 重复出队指针不重复创建任务或发送 XN/XD
+    status: passed
+    source: design 2.2 流程级约束
+  - id: check-arm-zero-skip
+    title: arm 指针为 0 时本臂不出队
+    status: passed
+    source: design 2.2 流程级约束
+  - id: check-feedback-without-connection
+    title: 9090 无连接时反馈失败只记录 WARN 不崩溃
+    status: passed
+    source: design 3 关键场景 7
+  - id: check-invalid-frame-survives
+    title: 非法长度帧记录协议错误且程序继续监听
+    status: passed
+    source: design 3 关键场景 6

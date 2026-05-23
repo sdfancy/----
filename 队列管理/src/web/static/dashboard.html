@@ -1,0 +1,458 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>队列监控看板</title>
+  <style>
+    :root {
+      --bg: #f2f6f8;
+      --panel: #ffffff;
+      --ink: #1b2838;
+      --muted: #627389;
+      --line: #d8e0e7;
+      --accent: #007f7a;
+      --warn: #b25a00;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(160deg, #eef4f6, #f8f8f2);
+      color: var(--ink);
+    }
+    .wrap {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      letter-spacing: 0.2px;
+    }
+    .row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 5px 12px rgba(13, 34, 48, 0.08);
+    }
+    .label { color: var(--muted); font-size: 12px; }
+    .value { font-size: 21px; font-weight: 700; margin-top: 4px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .history-grid td.raw {
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-family: Consolas, "Courier New", monospace;
+    }
+    .cell-clip {
+      display: inline-block;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: bottom;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 12px rgba(13, 34, 48, 0.08);
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 6px 8px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th { background: #e9eff4; font-weight: 600; }
+    tr:last-child td { border-bottom: 0; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .warn { color: var(--warn); }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 1000px) {
+      .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+      .history-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>队列监控看板</h1>
+      <div class="hint" id="updatedAt">加载中...</div>
+    </div>
+
+    <!-- ===== 顶部统计卡片 ===== -->
+    <div class="row">
+      <div class="card"><div class="label">机械臂1出队指针</div><div class="value" id="ptr1">-</div></div>
+      <div class="card"><div class="label">机械臂2出队指针</div><div class="value" id="ptr2">-</div></div>
+      <div class="card"><div class="label">队列长度</div><div class="value" id="qsize">-</div></div>
+      <div class="card"><div class="label">溢出覆盖次数</div><div class="value" id="drops">-</div></div>
+      <div class="card"><div class="label">入队流程模式</div><div class="value" id="flowMode">-</div></div>
+      <div class="card"><div class="label">超时填充次数</div><div class="value" id="timeoutFills">-</div></div>
+      <div class="card"><div class="label">相机连接</div><div class="value" id="cam2d">-</div></div>
+      <div class="card"><div class="label">完成任务数</div><div class="value" id="completedTasks">-</div></div>
+    </div>
+
+    <!-- ===== 设备连接状态 ===== -->
+    <table>
+      <thead>
+        <tr><th colspan="3">设备连接状态</th></tr>
+        <tr><th>设备</th><th>状态</th><th>详情</th></tr>
+      </thead>
+      <tbody id="deviceConnBody"></tbody>
+    </table>
+
+    <!-- ===== 发送缓存区（机械臂1 / 机械臂2）===== -->
+    <div class="grid" style="margin-top:12px;">
+      <table>
+        <thead>
+          <tr><th colspan="6">发送缓存区 — 机械臂1</th></tr>
+          <tr><th>出队指针</th><th>计数</th><th>缓存数据</th><th>发送次数</th><th>已完成</th><th>来源</th></tr>
+        </thead>
+        <tbody id="buf1Body"></tbody>
+      </table>
+      <table>
+        <thead>
+          <tr><th colspan="6">发送缓存区 — 机械臂2</th></tr>
+          <tr><th>出队指针</th><th>计数</th><th>缓存数据</th><th>发送次数</th><th>已完成</th><th>来源</th></tr>
+        </thead>
+        <tbody id="buf2Body"></tbody>
+      </table>
+    </div>
+
+    <!-- ===== 机械臂1队列 / 机械臂2队列 ===== -->
+    <div class="grid" style="margin-top:12px;">
+      <table>
+        <thead>
+          <tr><th colspan="7">机械臂1队列</th></tr>
+          <tr>
+            <th>指针</th><th>计数</th><th>队列数据</th><th>有数据</th>
+            <th>发送次数</th><th>完成</th><th>更新时间</th>
+          </tr>
+        </thead>
+        <tbody id="arm1Body"></tbody>
+      </table>
+      <table>
+        <thead>
+          <tr><th colspan="7">机械臂2队列</th></tr>
+          <tr>
+            <th>指针</th><th>计数</th><th>队列数据</th><th>有数据</th>
+            <th>发送次数</th><th>完成</th><th>更新时间</th>
+          </tr>
+        </thead>
+        <tbody id="arm2Body"></tbody>
+      </table>
+    </div>
+
+    <!-- ===== 3D流程专属区（dual_camera_11_12 模式时显示）===== -->
+    <div id="section3d" style="display:none;">
+      <table style="margin-top:12px;">
+        <thead>
+          <tr><th colspan="6">新入队周期状态（11/12 + 2D/3D）</th></tr>
+          <tr><th>计数</th><th>入队指针</th><th>工件类型</th><th>已收12</th><th>已发3D结束</th><th>已入队机械臂</th></tr>
+        </thead>
+        <tbody id="cycleBody"></tbody>
+      </table>
+      <table style="margin-top:12px;">
+        <thead>
+          <tr><th colspan="8">主队列（总览）</th></tr>
+          <tr><th>序号</th><th>指针</th><th>计数</th><th>有数据</th><th>大小</th><th>队列数据</th><th>告警</th><th>机械臂缓存</th></tr>
+        </thead>
+        <tbody id="mainQueueBody"></tbody>
+      </table>
+    </div>
+
+    <!-- ===== PLC 命令展示区 ===== -->
+    <table style="margin-top:12px;">
+      <thead>
+        <tr><th colspan="4">PLC 原始命令展示区（按收到顺序，最新在最前）</th></tr>
+        <tr><th>时间</th><th>通道</th><th>原始HEX</th><th>解析说明</th></tr>
+      </thead>
+      <tbody id="plcCmdBody"></tbody>
+    </table>
+
+    <!-- ===== 数据发送历史记录 ===== -->
+    <div class="history-grid">
+      <!-- 3D模式：入队事件历史 -->
+      <table id="historyEnqueueSection" style="display:none;">
+        <thead>
+          <tr><th colspan="6">入队记录（3D流程）</th></tr>
+          <tr><th>序号</th><th>时间</th><th>指针</th><th>计数</th><th>历史数据</th><th>说明</th></tr>
+        </thead>
+        <tbody id="historyEnqueueBody"></tbody>
+      </table>
+      <table>
+        <thead>
+          <tr><th colspan="6">机械臂1 数据发送历史</th></tr>
+          <tr><th>序号</th><th>时间</th><th>指针</th><th>计数</th><th>发送数据</th><th>说明</th></tr>
+        </thead>
+        <tbody id="historyArm1Body"></tbody>
+      </table>
+      <table>
+        <thead>
+          <tr><th colspan="6">机械臂2 数据发送历史</th></tr>
+          <tr><th>序号</th><th>时间</th><th>指针</th><th>计数</th><th>发送数据</th><th>说明</th></tr>
+        </thead>
+        <tbody id="historyArm2Body"></tbody>
+      </table>
+    </div>
+    <div class="hint" id="historyMeta">历史记录加载中...</div>
+
+    <div class="hint" id="footerHint"></div>
+  </div>
+
+  <script>
+    // 从对象中按数字键/字符串键读取值，兼容 Python dict 序列化后的 key 形式。
+    function asMapValue(obj, key) {
+      if (!obj) return "-";
+      if (obj[key] !== undefined) return obj[key];
+      const s = String(key);
+      if (obj[s] !== undefined) return obj[s];
+      return "-";
+    }
+
+    // 布尔值简写展示：Y/N
+    function boolTag(v) {
+      return v ? "Y" : "N";
+    }
+
+    // 表格渲染通用函数：目标 tbody + 数据行 + 行模板函数。
+    function renderRows(targetId, rows, mapper, emptyColspan = 8) {
+      const body = document.getElementById(targetId);
+      if (!rows || rows.length === 0) {
+        body.innerHTML = `<tr><td colspan="${emptyColspan}" class="hint">暂无数据</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(mapper).join('');
+    }
+
+    // 时间戳（秒）转本地可读时间。
+    function formatTs(ts) {
+      if (!ts) return "-";
+      const d = new Date(ts * 1000);
+      return d.toLocaleTimeString();
+    }
+
+    async function refresh() {
+      try {
+        // 每秒拉取一次最新状态快照。
+        const res = await fetch('/api/status', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // 指针区：显示 PLC 最新出队指针（arm1 / arm2）
+        const pointers = data.pointers || {};
+        const dequeue = pointers.dequeue || {};
+
+        document.getElementById('ptr1').textContent = asMapValue(dequeue, 1);
+        document.getElementById('ptr2').textContent = asMapValue(dequeue, 2);
+        document.getElementById('qsize').textContent = (data.main_queue || []).length;
+        const stats = data.statistics || {};
+        document.getElementById('drops').textContent = stats.overflow_drops ?? '-';
+        document.getElementById('timeoutFills').textContent = stats.timeout_fills ?? '-';
+        document.getElementById('completedTasks').textContent = stats.completed_tasks ?? '-';
+        document.getElementById('updatedAt').textContent = `更新时间：${formatTs(data.updated_at)}`;
+
+        const flow = data.enqueue_flow || {};
+        const flowRuntime = flow.runtime || {};
+        const flowMode = flow.mode || '-';
+        document.getElementById('flowMode').textContent = flowMode;
+
+        const plcStatus = data.plc_status || {};
+        const armConnections = data.arm_connections || {};
+        const camera = data.camera || {};
+        const cameraMode = camera.mode || '';
+        const channels = camera.channels || {};
+        let cam2dText = '-';
+        if (cameraMode === 'dual_camera_11_12') {
+          const c2d = channels['2d'] || {};
+          const c2dAddr = c2d.client_addr ? `${c2d.client_addr[0]}:${c2d.client_addr[1]}` : '';
+          cam2dText = c2d.connected ? `已连接 ${c2dAddr}` : '未连接';
+        } else if (cameraMode === 'legacy_single_camera') {
+          // legacy模式：相机作为客户端连接到软件，显示哪个通道有连接
+          const c2d = channels['2d'] || {};
+          const c2dAddr = c2d.client_addr ? `${c2d.client_addr[0]}:${c2d.client_addr[1]}` : '';
+          cam2dText = c2d.connected ? `已连接 ${c2dAddr}` : (camera.connected ? '已连接' : '未连接');
+        }
+        document.getElementById('cam2d').textContent = cam2dText;
+
+        const camConnected = cam2dText.startsWith('已连接');
+        const arm1Status = asMapValue(armConnections, 1);
+        const arm2Status = asMapValue(armConnections, 2);
+        const deviceRows = [
+          {
+            device: 'PLC（入队口）',
+            status: plcStatus.enqueue_connections > 0 ? '已连接' : '未连接',
+            detail: `入队连接=${plcStatus.enqueue_connections ?? '-'} 出队连接=${plcStatus.dequeue_connections ?? '-'}`
+          },
+          {
+            device: '相机',
+            status: camConnected ? '已连接' : '未连接',
+            detail: cam2dText
+          },
+          {
+            device: '机械臂1',
+            status: arm1Status === 'connected' ? '已连接' : '未连接',
+            detail: arm1Status
+          },
+          {
+            device: '机械臂2',
+            status: arm2Status === 'connected' ? '已连接' : '未连接',
+            detail: arm2Status
+          }
+        ];
+        renderRows('deviceConnBody', deviceRows, (r) => `
+          <tr>
+            <td>${r.device}</td>
+            <td style="color:${r.status==='已连接'?'#4caf50':'#f44336'};font-weight:bold">${r.status}</td>
+            <td>${r.detail}</td>
+          </tr>
+        `, 3);
+
+        // ===== 根据流程模式控制 3D 专属区显隐 =====
+        const is3D = (flowMode === 'dual_camera_11_12');
+        document.getElementById('section3d').style.display = is3D ? '' : 'none';
+        document.getElementById('historyEnqueueSection').style.display = is3D ? '' : 'none';
+        if (is3D) {
+          // 3D模式：活动入队周期（2D+3D协同状态）
+          renderRows('cycleBody', flowRuntime.active_cycles || [], (r) => `
+            <tr>
+              <td>${r.count ?? '-'}</td>
+              <td>${r.pointer ?? '-'}</td>
+              <td>${r.part_type || '-'}</td>
+              <td>${boolTag(r.end_received)}</td>
+              <td>${boolTag(r.end_sent_to_3d)}</td>
+              <td>${(r.arm_ready || []).join(',') || '-'}</td>
+            </tr>
+          `, 6);
+          // 3D模式：主队列总览
+          renderRows('mainQueueBody', data.main_queue || [], (r) => `
+            <tr>
+              <td>${r.enqueue_seq}</td><td>${r.pointer}</td><td>${r.count}</td>
+              <td>${boolTag(r.has_data)}</td><td>${r.data_size}</td>
+              <td><span class="cell-clip">${r.data_preview || '-'}</span></td>
+              <td class="warn">${r.warning || ''}</td>
+              <td>${Object.keys(r.arm_cache || {}).join(',')}</td>
+            </tr>
+          `);
+        }
+
+        // 发送缓存区（两种模式都显示）
+        const sendBuffers = data.arm_send_buffers || {};
+        function renderSendBuf(targetId, buf) {
+          const body = document.getElementById(targetId);
+          if (!buf || !buf.has_data) {
+            body.innerHTML = `<tr><td colspan="6" class="hint">缓存为空</td></tr>`;
+            return;
+          }
+          body.innerHTML = `<tr>
+            <td>${buf.pointer ?? '-'}</td>
+            <td>${buf.count ?? '-'}</td>
+            <td class="raw">${buf.data_preview || '-'}</td>
+            <td>${buf.send_count ?? 0}</td>
+            <td style="color:${buf.confirmed?'#4caf50':'#ff9800'}">${buf.confirmed ? '已确认' : '等待确认'}</td>
+            <td>${buf.source || '-'}</td>
+          </tr>`;
+        }
+        renderSendBuf('buf1Body', sendBuffers['1']);
+        renderSendBuf('buf2Body', sendBuffers['2']);
+
+        // 机械臂分队列（两种模式都显示）
+        const armQueues = data.arm_queues || {};
+        const armQueueRow = (r) => `
+          <tr>
+            <td>${r.pointer}</td><td>${r.count}</td>
+            <td><span class="cell-clip">${r.data_preview || '-'}</span></td>
+            <td>${boolTag(r.has_data)}</td><td>${r.send_count ?? 0}</td>
+            <td>${boolTag(r.confirmed)}</td><td>${formatTs(r.updated_at)}</td>
+          </tr>`;
+        renderRows('arm1Body', armQueues['1'] || [], armQueueRow, 7);
+        renderRows('arm2Body', armQueues['2'] || [], armQueueRow, 7);
+
+        // PLC 命令展示区（两种模式都显示，最新在前）
+        const cmdHistory = (plcStatus.cmd_history || []).slice().reverse();
+        renderRows('plcCmdBody', cmdHistory, (r) => `
+          <tr>
+            <td>${formatTs(r.ts)}</td>
+            <td style="color:${r.channel==='enqueue'?'#64b5f6':'#aed581'}">${r.channel}</td>
+            <td class="raw">${r.raw_hex || '-'}</td>
+            <td>${r.display || '-'}</td>
+          </tr>
+        `, 4);
+
+        // 历史记录分流
+        const historyItems = data.history_items || [];
+        const historyMeta = data.history_meta || {};
+        const historyRow = (r) => `
+          <tr>
+            <td>${r.seq}</td><td>${formatTs(r.ts)}</td>
+            <td>${r.pointer ?? '-'}</td><td>${r.count ?? '-'}</td>
+            <td class="raw">${r.history_data || '-'}</td>
+            <td>${r.message || ''}</td>
+          </tr>`;
+
+        if (is3D) {
+          // 3D模式：显示所有入队事件历史（camera_match / timeout_fill 等）
+          const enqueueEvents = new Set(['enqueue','camera_match','camera_drop','timeout_fill','overflow_drop']);
+          const enqueueHistory = historyItems.filter(r =>
+            enqueueEvents.has(r.event) || r.arm_id === null || r.arm_id === undefined);
+          renderRows('historyEnqueueBody', enqueueHistory, historyRow, 6);
+        }
+
+        // 两种模式都显示机械臂发送历史
+        const arm1History = historyItems.filter(r => Number(r.arm_id) === 1 && r.event === 'data_sent');
+        const arm2History = historyItems.filter(r => Number(r.arm_id) === 2 && r.event === 'data_sent');
+        renderRows('historyArm1Body', arm1History, historyRow, 6);
+        renderRows('historyArm2Body', arm2History, historyRow, 6);
+
+        document.getElementById('historyMeta').textContent =
+          `流程=${flowMode}；机械臂1发送 ${arm1History.length} 条，机械臂2发送 ${arm2History.length} 条；后端缓存 ${historyMeta.stored ?? 0}/${historyMeta.store_limit ?? 0} 条`;
+
+        // 底部提示按模式显示
+        const hint = document.getElementById('footerHint');
+        if (is3D) {
+          hint.innerHTML = '3D流程：PLC 入队口（<strong>9999</strong>）发 11/12；2D+3D 协同；完成后回 PLC <strong>Done</strong>；出队反馈 <strong>XN/XD</strong>（9090）。';
+        } else {
+          hint.innerHTML = '花都2D流程：PLC 入队口（<strong>9999</strong>）发 01/11/12；软件回 <strong>1Done/2Done</strong> 给 PLC；出队反馈 <strong>1N/1D/2N/2D</strong>（<strong>9090</strong>）；机械臂完成确认：<strong>1</strong>。';
+        }
+      } catch (err) {
+        document.getElementById('updatedAt').textContent = `加载失败：${err.message}`;
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 1000);
+  </script>
+</body>
+</html>
