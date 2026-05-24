@@ -1,6 +1,11 @@
 #include "robot/duco/DucoRobotController.h"
 
+#include "robot/MotionPlanner.h"
+#include "robot/duco/DucoMotionWorker.h"
+
 #include <array>
+
+#include <QTimer>
 
 namespace spray::robot::duco {
 
@@ -109,9 +114,64 @@ void DucoRobotController::enqueueTask(const core::RobotTask& task)
         return;
     }
 
-    const auto message = QStringLiteral("DUCO motion execution is not implemented in duco-sdk-adapter");
-    emit warning(message);
-    emit taskFinished(task, false, message);
+    if (status_.connectionState != RobotConnectionState::Prepared) {
+        const auto message = QStringLiteral("DUCO robot is not prepared");
+        emit warning(message);
+        emit taskFinished(task, false, message);
+        return;
+    }
+
+    const auto recipe = recipes_.value(task.armId);
+    auto plan = MotionPlanner::plan(task, recipe);
+    if (!plan.ok) {
+        const auto message = plan.message;
+        emit warning(message);
+        emit taskFinished(task, false, message);
+        return;
+    }
+
+    enqueuePlannedTask(plan.planned);
+}
+
+void DucoRobotController::setMotionRecipe(const MotionRecipe& recipe)
+{
+    recipes_.insert(recipe.armId, recipe);
+}
+
+void DucoRobotController::enqueuePlannedTask(const PlannedRobotTask& planned)
+{
+    const int armId = planned.task.armId;
+    arms_[armId].pending.enqueue(planned);
+    QTimer::singleShot(0, this, [this, armId]() {
+        tryStartNext(armId);
+    });
+}
+
+void DucoRobotController::tryStartNext(int armId)
+{
+    auto& state = arms_[armId];
+    if (state.busy || state.pending.isEmpty()) {
+        return;
+    }
+
+    state.busy = true;
+    const auto planned = state.pending.dequeue();
+    emit taskAccepted(planned.task);
+
+    QString message;
+    QStringList warnings;
+    DucoMotionWorker worker(motionClient_.get());
+    const bool ok = worker.execute(planned, &message, &warnings);
+    for (const auto& warningMessage : warnings) {
+        emit warning(warningMessage);
+    }
+    if (!ok) {
+        failWithFault(message);
+    }
+    emit taskFinished(planned.task, ok, message);
+
+    state.busy = false;
+    tryStartNext(armId);
 }
 
 RobotCommandResult DucoRobotController::stop()

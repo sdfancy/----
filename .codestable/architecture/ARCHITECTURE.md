@@ -19,6 +19,11 @@
 - DUCO 远程 API：新松机械臂二次开发接口，默认远程端口 `7003`。
 - 机械臂控制契约：`robot::IRobotController` 是 `core::DequeueCoordinator` 面向机械臂的唯一接口，fake robot 和 DUCO controller 都走该契约。
 - DUCO client role：DUCO 适配层按 motion/control/heartbeat/status 拆分 SDK client 对象，避免多线程阻塞调用共享同一 `DucoCobot`。
+- ArmPayload：robot 层从 `(flag,count,...)E` 解析出的机械臂 payload，包含 arm、count、默认空任务和运动数值。
+- MotionSegment：robot 层中立运动段，当前覆盖 `movej_pose2`、`movel`、末端 IO 和控制柜 IO。
+- MotionRecipe：每个 arm 的最小喷涂任务配置，包含工具/工件坐标、速度、加速度、喷枪 IO 和字段映射。
+- PlannedRobotTask：`core::RobotTask` 加 `MotionSegment` 序列后的 robot 内部执行形态。
+- DUCO motion worker：按 arm 串行执行 motion client 阻塞调用的 worker，controller 只做规划和调度粘合。
 
 ## 3. 子系统 / 模块索引
 
@@ -27,6 +32,7 @@
 - 已落地最小闭环：`app -> io/plc -> protocol -> core -> robot/fake -> io/plc feedback`
 - 已落地相机入队 parity：`app -> io/plc + io/camera -> core workflow -> QueueManager -> PLC enqueue feedback`
 - 已落地 DUCO SDK 适配骨架：`app -> robot::IRobotController -> robot/duco role clients`
+- 已落地 DUCO 任务执行基础：`QueueManager raw payload -> MotionPlanner -> DucoMotionWorker -> DUCO motion client -> XN/XD`
 - 相机协议说明：`.codestable/architecture/protocol-camera.md`
 
 ### 3.1 已落地最小闭环
@@ -53,12 +59,23 @@
 - `robot/duco`：当前默认构建不链接现场 SDK，`SPRAY_ENABLE_DUCO` 和 SDK include/lib 作为可选构建入口；缺 SDK 时 fake 构建和测试不受影响。
 - `app`：`Application` 按 `[robot].mode` 选择 fake 或 DUCO controller，并在 start/stop 中接入 robot lifecycle。
 
+### 3.4 已落地 DUCO 任务执行基础
+
+- `robot`：`MotionPlanner` 解析 raw payload，校验 arm/count/数值字段，并按 `MotionRecipe` 生成 `movej_pose2 -> IO on -> movel -> IO off` 的中立段序列。
+- `robot`：`MotionTypes` 定义 `ArmPayload`、`Pose6d`、`Joint6d`、`MotionSegment`、`MotionRecipe` 和 `PlannedRobotTask`，不把 DUCO SDK 类型暴露给 core。
+- `robot/duco`：`IDucoClient` seam 暴露 `moveJPose2`、`moveL`、`setToolDigitalOut`、`setStandardDigitalOut`，默认 unavailable client 返回失败但不要求现场 SDK。
+- `robot/duco`：`DucoRobotController` 对默认空任务直接 accepted/finished；对非默认任务先规划再按 arm 投递执行，规划失败或 recipe 缺失只 warning 和失败结束。
+- `robot/duco`：`DucoMotionWorker` 只使用 motion client 执行阻塞 motion/IO；任一段返回 `-1` 时尝试关闭已打开喷枪 IO，并让 controller 进入 faulted。
+- `core`：`DequeueCoordinator` 只在 `taskFinished(ok=true)` 时 mark done 并发 `XD`；`ok=false` 不发送正常完成反馈。
+
 ## 4. 关键架构决定
 
 - 当前阶段不修改 PLC 与相机外部通讯流程。
 - 相机入队状态机不放入 `QueueManager`；`QueueManager` 只负责成对队列、缓存和 `storeCameraData()`。
 - 机械臂侧不再依赖示教器程序的 `data/1` TCP 协议，改为软件通过 DUCO 远程 API 主动执行喷涂任务。
 - `core::DequeueCoordinator` 只依赖 `robot::IRobotController`，不得直接依赖 fake 或 DUCO SDK 类型。
+- `core::RobotTask` 保留 raw payload，payload 解析、运动规划、recipe 校验和 DUCO motion 调用都在 robot 层完成。
+- `taskFinished(ok=false)` 代表任务失败或安全拒绝，不得发送正常 `XD`；当前不新增 PLC 错误反馈码。
 - HMI 建议使用 Qt Widgets；通讯层使用 Qt Network，预留 Modbus 使用 Qt SerialBus。
 
 ## 5. 已知约束 / 硬边界
@@ -68,6 +85,7 @@
 - PLC 与相机 socket 回调不得阻塞等待对方返回；跨设备编排放在 core workflow。
 - dual camera `Done` 对同一 count 只发送一次，且必须 arm1/arm2 的 3D payload 都写入队列。
 - DUCO API 多线程调用必须隔离对象：阻塞运动、任务控制、心跳不得共享同一个 `DucoCobot` 对象。
-- DUCO `open()` 未成功前禁止上电、使能和任务控制；任一 DUCO 调用返回 `-1` 进入 faulted 并发 warning，不伪造成任务完成。
-- 当前已接入 PLC、相机入队流程和 DUCO 适配骨架；仍不包含真实喷涂运动路径、Qt Widgets 和 Modbus，这些能力由后续 roadmap item 单独接入。
+- DUCO `open()` 未成功前禁止上电、使能、任务控制和运动；任一 DUCO 调用返回 `-1` 进入 faulted 并发 warning，不伪造成任务完成。
+- 非默认 DUCO 任务没有有效 `MotionRecipe` 时必须拒绝执行；现场 recipe 文件、真实字段映射和喷枪接线由后续 `field-config-and-recipes` 完成。
+- 当前已接入 PLC、相机入队流程、DUCO 适配骨架和 DUCO 任务执行基础；仍不包含 Qt Widgets、Modbus、完整现场 recipe 管理和真实硬件验收。
 - Windows/Qt MinGW 构建在中文源码路径下不能把构建目录放在项目内，Qt `moc` 会失败；使用 ASCII 构建目录。

@@ -30,8 +30,10 @@ set(SPRAY_COMMON_SOURCES
     src/protocol/ByteCodec.cpp
     src/protocol/CameraProtocol.cpp
     src/protocol/PlcProtocol.cpp
+    src/robot/MotionPlanner.cpp
     src/robot/duco/DucoClientFactory.cpp
     src/robot/duco/DucoClient.cpp
+    src/robot/duco/DucoMotionWorker.cpp
     src/robot/duco/DucoRobotController.cpp
     src/robot/FakeRobotController.cpp
     src/robot/IRobotController.cpp
@@ -67,6 +69,7 @@ qt_add_executable(spray_tests
     tests/test_enqueue_workflow.cpp
     tests/test_fake_robot_loop.cpp
     tests/test_legacy_camera_workflow.cpp
+    tests/test_motion_planner.cpp
     tests/test_plc_endpoint.cpp
     tests/test_plc_protocol.cpp
     tests/test_queue_manager.cpp

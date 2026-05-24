@@ -58,6 +58,62 @@ public:
         state.message = QStringLiteral("DUCO SDK is not enabled");
         return state;
     }
+
+    int moveJPose2(const Pose6d& pose,
+                   double velocity,
+                   double acceleration,
+                   double radius,
+                   const Joint6d& qNear,
+                   const QString& tool,
+                   const QString& wobj,
+                   bool block) override
+    {
+        Q_UNUSED(pose)
+        Q_UNUSED(velocity)
+        Q_UNUSED(acceleration)
+        Q_UNUSED(radius)
+        Q_UNUSED(qNear)
+        Q_UNUSED(tool)
+        Q_UNUSED(wobj)
+        Q_UNUSED(block)
+        return -1;
+    }
+
+    int moveL(const Pose6d& pose,
+              double velocity,
+              double acceleration,
+              double radius,
+              const Joint6d& qNear,
+              const QString& tool,
+              const QString& wobj,
+              bool block) override
+    {
+        Q_UNUSED(pose)
+        Q_UNUSED(velocity)
+        Q_UNUSED(acceleration)
+        Q_UNUSED(radius)
+        Q_UNUSED(qNear)
+        Q_UNUSED(tool)
+        Q_UNUSED(wobj)
+        Q_UNUSED(block)
+        return -1;
+    }
+
+    int setToolDigitalOut(int channel, bool value, bool block) override
+    {
+        Q_UNUSED(channel)
+        Q_UNUSED(value)
+        Q_UNUSED(block)
+        return -1;
+    }
+
+    int setStandardDigitalOut(int channel, bool value, bool block) override
+    {
+        Q_UNUSED(channel)
+        Q_UNUSED(value)
+        Q_UNUSED(block)
+        return -1;
+    }
 };
 
 class UnavailableDucoClientFactory final : public IDucoClientFactory {

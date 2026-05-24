@@ -1,5 +1,7 @@
 #pragma once
 
+#include "robot/MotionTypes.h"
+
 #include <QString>
 
 #include <memory>
@@ -38,6 +40,24 @@ public:
     virtual int pause(bool block) = 0;
     virtual int resume(bool block) = 0;
     virtual DucoRobotState getRobotState() = 0;
+    virtual int moveJPose2(const Pose6d& pose,
+                           double velocity,
+                           double acceleration,
+                           double radius,
+                           const Joint6d& qNear,
+                           const QString& tool,
+                           const QString& wobj,
+                           bool block) = 0;
+    virtual int moveL(const Pose6d& pose,
+                      double velocity,
+                      double acceleration,
+                      double radius,
+                      const Joint6d& qNear,
+                      const QString& tool,
+                      const QString& wobj,
+                      bool block) = 0;
+    virtual int setToolDigitalOut(int channel, bool value, bool block) = 0;
+    virtual int setStandardDigitalOut(int channel, bool value, bool block) = 0;
 };
 
 class IDucoClientFactory {

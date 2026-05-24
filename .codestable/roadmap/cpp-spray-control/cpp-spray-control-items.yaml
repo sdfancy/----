@@ -29,8 +29,8 @@ items:
   - slug: duco-task-executor
     description: 将队列 payload 转成喷涂任务并调用 DUCO 运动接口执行，按开始和完成回 XN/XD
     depends_on: [camera-flow-parity, duco-sdk-adapter]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-duco-task-executor
     minimal_loop: false
     notes: null
 

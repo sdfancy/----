@@ -208,7 +208,7 @@ RobotSnapshot robotSnapshot(int armId)
 1. **cpp-minimal-loop**（done，feature `2026-05-23-cpp-minimal-loop`）— CMake/Qt 项目骨架、PLC 双端口、队列核心、fake robot 执行器，跑通指针到 `XN/XD` 的最小闭环。
 2. **camera-flow-parity**（done，feature `2026-05-23-camera-flow-parity`）— 复刻 legacy 单相机和 dual camera 入队流程，保证相机数据入队与默认值策略一致。
 3. **duco-sdk-adapter**（done，feature `2026-05-24-duco-sdk-adapter`）— 封装 DUCO C++ 远程 API、连接、心跳、上电使能、状态读取和任务控制。
-4. **duco-task-executor** — 把队列 payload 转成喷涂任务并调用 DUCO 运动接口执行。
+4. **duco-task-executor**（done，feature `2026-05-24-duco-task-executor`）— 把队列 payload 转成喷涂任务并调用 DUCO 运动接口执行。
 5. **qt-hmi-shell** — Qt Widgets HMI 页面、表格模型、设备状态和操作命令设计落地。
 6. **modbus-plc-reservation** — Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留。
 7. **diagnostics-and-logs** — 原始通讯日志、事件历史、健康检查、错误码和测试模拟器。
@@ -235,3 +235,4 @@ RobotSnapshot robotSnapshot(int armId)
 - 2026-05-23：完成 `cpp-minimal-loop`，最小闭环进入 done。
 - 2026-05-24：完成 `camera-flow-parity`，相机入队流程进入 done。
 - 2026-05-24：完成 `duco-sdk-adapter`，机械臂控制契约和 DUCO SDK 适配骨架进入 done。
+- 2026-05-24：完成 `duco-task-executor`，队列 payload 到 DUCO 运动段规划和执行基础进入 done。

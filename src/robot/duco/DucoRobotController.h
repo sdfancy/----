@@ -2,7 +2,11 @@
 
 #include "config/AppConfig.h"
 #include "robot/IRobotController.h"
+#include "robot/MotionTypes.h"
 #include "robot/duco/DucoClient.h"
+
+#include <QHash>
+#include <QQueue>
 
 #include <memory>
 
@@ -24,14 +28,22 @@ public:
     RobotCommandResult pause() override;
     RobotCommandResult resume() override;
     RobotStatus readStatus() override;
+    void setMotionRecipe(const MotionRecipe& recipe);
 
 private:
+    struct ArmExecutionState {
+        bool busy = false;
+        QQueue<PlannedRobotTask> pending;
+    };
+
     bool createRoleClients(QString* errorMessage);
     RobotCommandResult ensureConnected();
     RobotCommandResult failWithFault(const QString& message);
     RobotCommandResult runControlCommand(const QString& command, int (IDucoClient::*method)(bool));
     void applyRobotState(const DucoRobotState& state);
     RobotCommandResult unsupportedCommand(const QString& command) const;
+    void enqueuePlannedTask(const PlannedRobotTask& planned);
+    void tryStartNext(int armId);
 
     config::RobotConfig config_;
     std::unique_ptr<IDucoClientFactory> clientFactory_;
@@ -40,6 +52,8 @@ private:
     std::unique_ptr<IDucoClient> heartbeatClient_;
     std::unique_ptr<IDucoClient> statusClient_;
     RobotStatus status_;
+    QHash<int, MotionRecipe> recipes_;
+    QHash<int, ArmExecutionState> arms_;
 };
 
 } // namespace spray::robot::duco

@@ -7,6 +7,11 @@
 #include <QtTest/QtTest>
 
 using spray::config::RobotConfig;
+using spray::core::RobotTask;
+using spray::robot::Joint6d;
+using spray::robot::MotionRecipe;
+using spray::robot::MotionSegmentType;
+using spray::robot::Pose6d;
 using spray::robot::duco::DucoClientRole;
 using spray::robot::duco::DucoRobotController;
 using spray::robot::duco::DucoRobotState;
@@ -82,6 +87,56 @@ public:
         return state_->robotState;
     }
 
+    int moveJPose2(const Pose6d& pose,
+                   double velocity,
+                   double acceleration,
+                   double radius,
+                   const Joint6d& qNear,
+                   const QString& tool,
+                   const QString& wobj,
+                   bool block) override
+    {
+        Q_UNUSED(pose)
+        Q_UNUSED(qNear)
+        Q_UNUSED(tool)
+        Q_UNUSED(wobj)
+        return recordInt(QStringLiteral("moveJPose2:%1:%2:%3:%4")
+                             .arg(velocity)
+                             .arg(acceleration)
+                             .arg(radius)
+                             .arg(block));
+    }
+
+    int moveL(const Pose6d& pose,
+              double velocity,
+              double acceleration,
+              double radius,
+              const Joint6d& qNear,
+              const QString& tool,
+              const QString& wobj,
+              bool block) override
+    {
+        Q_UNUSED(pose)
+        Q_UNUSED(qNear)
+        Q_UNUSED(tool)
+        Q_UNUSED(wobj)
+        return recordInt(QStringLiteral("moveL:%1:%2:%3:%4")
+                             .arg(velocity)
+                             .arg(acceleration)
+                             .arg(radius)
+                             .arg(block));
+    }
+
+    int setToolDigitalOut(int channel, bool value, bool block) override
+    {
+        return recordInt(QStringLiteral("setToolDigitalOut:%1:%2:%3").arg(channel).arg(value).arg(block));
+    }
+
+    int setStandardDigitalOut(int channel, bool value, bool block) override
+    {
+        return recordInt(QStringLiteral("setStandardDigitalOut:%1:%2:%3").arg(channel).arg(value).arg(block));
+    }
+
 private:
     int recordInt(const QString& call)
     {
@@ -110,6 +165,33 @@ public:
 private:
     QSharedPointer<RecordingState> state_;
 };
+
+MotionRecipe recipeForArm(int armId)
+{
+    MotionRecipe recipe;
+    recipe.enabled = true;
+    recipe.armId = armId;
+    recipe.tool = QStringLiteral("spray_tool");
+    recipe.wobj = QStringLiteral("station");
+    recipe.approachSpeed = 0.5;
+    recipe.lineSpeed = 0.25;
+    recipe.acceleration = 0.8;
+    recipe.radius = 0.01;
+    recipe.sprayIoType = MotionSegmentType::ToolDigitalOut;
+    recipe.sprayIoChannel = 2;
+    return recipe;
+}
+
+RobotTask robotTask(int armId, quint16 count, const QByteArray& payload, bool defaultNoop = false)
+{
+    RobotTask task;
+    task.armId = armId;
+    task.count = count;
+    task.pointer = 9;
+    task.payload = payload;
+    task.defaultNoop = defaultNoop;
+    return task;
+}
 
 } // namespace
 
@@ -216,6 +298,121 @@ private slots:
         QCOMPARE(status.robotState, 7);
         QVERIFY(state->calls.contains(QStringLiteral("status.getRobotState")));
         QVERIFY(!state->calls.contains(QStringLiteral("control.getRobotState")));
+    }
+
+    void recordingClientCapturesMotionAndIoCalls()
+    {
+        auto state = QSharedPointer<RecordingState>::create();
+        RecordingDucoClient client(DucoClientRole::Motion, state);
+
+        QVERIFY(client.moveJPose2(Pose6d{}, 0.5, 0.8, 0.01, Joint6d{}, QStringLiteral("tool"),
+                                  QStringLiteral("wobj"), true) == 0);
+        QVERIFY(client.setToolDigitalOut(2, true, true) == 0);
+        QVERIFY(client.moveL(Pose6d{}, 0.25, 0.8, 0.01, Joint6d{}, QStringLiteral("tool"),
+                             QStringLiteral("wobj"), true) == 0);
+        QVERIFY(client.setStandardDigitalOut(3, false, true) == 0);
+
+        QVERIFY(state->calls.contains(QStringLiteral("motion.moveJPose2:0.5:0.8:0.01:1")));
+        QVERIFY(state->calls.contains(QStringLiteral("motion.setToolDigitalOut:2:1:1")));
+        QVERIFY(state->calls.contains(QStringLiteral("motion.moveL:0.25:0.8:0.01:1")));
+        QVERIFY(state->calls.contains(QStringLiteral("motion.setStandardDigitalOut:3:0:1")));
+    }
+
+    void defaultNoopDoesNotCallMotionClient()
+    {
+        auto state = QSharedPointer<RecordingState>::create();
+        RobotConfig config;
+        DucoRobotController controller(config, std::make_unique<RecordingFactory>(state));
+        int acceptedCount = 0;
+        bool finishedOk = false;
+        connect(&controller, &DucoRobotController::taskAccepted, this,
+                [&acceptedCount](const RobotTask&) { ++acceptedCount; });
+        connect(&controller, &DucoRobotController::taskFinished, this,
+                [&finishedOk](const RobotTask&, bool ok, const QString&) { finishedOk = ok; });
+
+        controller.enqueueTask(robotTask(1, 0, QByteArray("(1000,0)E"), true));
+
+        QCOMPARE(acceptedCount, 1);
+        QVERIFY(finishedOk);
+        QVERIFY(state->calls.isEmpty());
+    }
+
+    void validTaskExecutesPlannedMotionSequence()
+    {
+        auto state = QSharedPointer<RecordingState>::create();
+        RobotConfig config;
+        DucoRobotController controller(config, std::make_unique<RecordingFactory>(state));
+        QVERIFY(controller.prepare().ok);
+        controller.setMotionRecipe(recipeForArm(1));
+        state->calls.clear();
+
+        int acceptedCount = 0;
+        bool finishedOk = false;
+        connect(&controller, &DucoRobotController::taskAccepted, this,
+                [&acceptedCount](const RobotTask&) { ++acceptedCount; });
+        connect(&controller, &DucoRobotController::taskFinished, this,
+                [&finishedOk](const RobotTask&, bool ok, const QString&) { finishedOk = ok; });
+
+        controller.enqueueTask(robotTask(
+            1, 123, QByteArray("(1001,123,0.49,0.14,0.44,-1.14,0,-1.57)E")));
+
+        QTRY_COMPARE(acceptedCount, 1);
+        QTRY_VERIFY(finishedOk);
+        const QStringList expected{
+            QStringLiteral("motion.moveJPose2:0.5:0.8:0.01:1"),
+            QStringLiteral("motion.setToolDigitalOut:2:1:1"),
+            QStringLiteral("motion.moveL:0.25:0.8:0.01:1"),
+            QStringLiteral("motion.setToolDigitalOut:2:0:1"),
+        };
+        QCOMPARE(state->calls, expected);
+    }
+
+    void missingRecipeFailsWithoutAcceptedOrMotion()
+    {
+        auto state = QSharedPointer<RecordingState>::create();
+        RobotConfig config;
+        DucoRobotController controller(config, std::make_unique<RecordingFactory>(state));
+        QVERIFY(controller.prepare().ok);
+        state->calls.clear();
+        int acceptedCount = 0;
+        bool finishedCalled = false;
+        bool finishedOk = true;
+        connect(&controller, &DucoRobotController::taskAccepted, this,
+                [&acceptedCount](const RobotTask&) { ++acceptedCount; });
+        connect(&controller, &DucoRobotController::taskFinished, this,
+                [&finishedCalled, &finishedOk](const RobotTask&, bool ok, const QString&) {
+                    finishedCalled = true;
+                    finishedOk = ok;
+                });
+
+        controller.enqueueTask(robotTask(
+            1, 123, QByteArray("(1001,123,0.49,0.14,0.44,-1.14,0,-1.57)E")));
+
+        QCOMPARE(acceptedCount, 0);
+        QVERIFY(finishedCalled);
+        QVERIFY(!finishedOk);
+        QVERIFY(state->calls.isEmpty());
+    }
+
+    void motionFailureClosesSprayIoAndFaults()
+    {
+        auto state = QSharedPointer<RecordingState>::create();
+        state->returnByCall.insert(QStringLiteral("motion.moveL:0.25:0.8:0.01:1"), -1);
+        RobotConfig config;
+        DucoRobotController controller(config, std::make_unique<RecordingFactory>(state));
+        QVERIFY(controller.prepare().ok);
+        controller.setMotionRecipe(recipeForArm(1));
+        state->calls.clear();
+        bool finishedOk = true;
+        connect(&controller, &DucoRobotController::taskFinished, this,
+                [&finishedOk](const RobotTask&, bool ok, const QString&) { finishedOk = ok; });
+
+        controller.enqueueTask(robotTask(
+            1, 123, QByteArray("(1001,123,0.49,0.14,0.44,-1.14,0,-1.57)E")));
+
+        QTRY_VERIFY(!finishedOk);
+        QTRY_VERIFY(state->calls.contains(QStringLiteral("motion.setToolDigitalOut:2:0:1")));
+        QTRY_COMPARE(controller.readStatus().connectionState, spray::robot::RobotConnectionState::Faulted);
     }
 };
 

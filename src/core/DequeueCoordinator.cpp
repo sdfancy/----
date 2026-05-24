@@ -36,8 +36,11 @@ void DequeueCoordinator::onTaskAccepted(core::RobotTask task)
 
 void DequeueCoordinator::onTaskFinished(core::RobotTask task, bool ok, QString message)
 {
-    Q_UNUSED(ok)
     Q_UNUSED(message)
+
+    if (!ok) {
+        return;
+    }
 
     queueManager_->markTaskDone(task);
     const auto feedback = protocol::buildFeedback(task.armId, domain::FeedbackStage::Done);
