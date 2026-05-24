@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Menu Event Log</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <path d="M6 3.8h8.6L19 8.2v12H6z" fill="#1f2335" stroke="#414868" stroke-width="1"/>
+    <path d="M14.6 3.8v4.6H19" fill="#24283b" stroke="#565f89" stroke-width="0.75"/>
+    <path d="M8.2 10.5h7.8M8.2 13.4h7.8M8.2 16.3h5.2" stroke="#a9b1d6" stroke-width="0.75"/>
+    <circle cx="7" cy="10.5" r="0.45" fill="#2ecc71"/><circle cx="7" cy="13.4" r="0.45" fill="#f1c40f"/><circle cx="7" cy="16.3" r="0.45" fill="#e74c3c"/>
+    <path d="M16.1 18.5c1.4 0 2.5-1.1 2.5-2.5s-1.1-2.5-2.5-2.5" stroke="#7dcfff" stroke-width="0.75" stroke-opacity="0.6"/>
+
+  </g>
+</svg>

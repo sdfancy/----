@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Menu Overview Dashboard</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <rect x="3" y="4" width="18" height="16" rx="2" fill="#1f2335" stroke="#414868" stroke-width="1"/>
+    <path d="M6 8.2h4.2v3.1H6zM13.8 8.2H18v3.1h-4.2zM6 14h4.2v2.8H6z" fill="#24283b" stroke="#565f89" stroke-width="0.65"/>
+    <path d="M13.6 16.7c.5-1.45 1.25-2.5 2.4-2.5s1.9 1.05 2.4 2.5" stroke="#7dcfff" stroke-width="1.2"/>
+    <path d="M15.2 16.3l1.05-1.25" stroke="#2ecc71" stroke-width="1.1"/>
+    <path d="M6.8 9.7h2.6M14.6 9.7h2.6M6.8 15.4h2.4" stroke="#a9b1d6" stroke-width="0.65"/>
+    <path d="M4.5 6.5h15" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.8"/>
+
+  </g>
+</svg>

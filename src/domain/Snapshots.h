@@ -37,4 +37,21 @@ struct DeviceHealthSnapshot {
     QString lastError;
 };
 
+struct RobotSnapshot {
+    int armId = 0;
+    bool connected = false;
+    bool enabled = false;
+    QString mode;
+    QString lastError;
+};
+
+struct SystemSnapshot {
+    QueueSnapshot queue;
+    QList<DeviceHealthSnapshot> devices;
+    QList<RobotSnapshot> robots;
+    QString overallStatus;
+    bool isRunning = false;
+    QString uptime;
+};
+
 } // namespace spray::domain

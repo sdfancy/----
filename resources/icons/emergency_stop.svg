@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Emergency Stop</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <ellipse cx="12" cy="18" rx="7.4" ry="2.2" fill="#11131c" stroke="#414868" stroke-width="0.9"/>
+    <path d="M7.3 9.4h9.4l1.7 4.2c.35.88-.25 1.85-1.2 1.95-3.45.36-6.95.36-10.4 0-.95-.1-1.55-1.07-1.2-1.95l1.7-4.2z" fill="#6b171b" stroke="#e74c3c" stroke-width="1"/>
+    <ellipse cx="12" cy="8.9" rx="6.2" ry="3.2" fill="#e74c3c" stroke="#ffc1bb" stroke-width="0.7"/>
+    <path d="M8 8.1c2.1-.9 5.9-1.2 8-.15" stroke="#ffffff" stroke-opacity="0.35" stroke-width="0.9"/>
+    <path d="M4 5.2 2.5 3.7M20 5.2l1.5-1.5M12 3V1.2" stroke="#ff9e64" stroke-width="1"/>
+
+  </g>
+</svg>

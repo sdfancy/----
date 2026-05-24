@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/hmi">
+        <file>styles/dark_industrial.qss</file>
+        <file>icons/alarm_ack.svg</file>
+        <file>icons/camera.svg</file>
+        <file>icons/emergency_stop.svg</file>
+        <file>icons/export.svg</file>
+        <file>icons/menu_config.svg</file>
+        <file>icons/menu_device.svg</file>
+        <file>icons/menu_log.svg</file>
+        <file>icons/menu_overview.svg</file>
+        <file>icons/menu_queue.svg</file>
+        <file>icons/menu_simulator.svg</file>
+        <file>icons/network.svg</file>
+        <file>icons/plc.svg</file>
+        <file>icons/refresh.svg</file>
+        <file>icons/robot.svg</file>
+        <file>icons/start.svg</file>
+        <file>icons/status_led_gray.svg</file>
+        <file>icons/status_led_green.svg</file>
+        <file>icons/status_led_red.svg</file>
+        <file>icons/status_led_yellow.svg</file>
+        <file>icons/stop.svg</file>
+    </qresource>
+</RCC>

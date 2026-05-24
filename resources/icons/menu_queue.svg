@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Menu Queue</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <rect x="4" y="4.5" width="13" height="3.6" rx="1" fill="#24283b" stroke="#565f89" stroke-width="0.8"/>
+    <rect x="4" y="10.2" width="13" height="3.6" rx="1" fill="#1f2335" stroke="#565f89" stroke-width="0.8"/>
+    <rect x="4" y="15.9" width="13" height="3.6" rx="1" fill="#24283b" stroke="#565f89" stroke-width="0.8"/>
+    <path d="M7 6.3h6.2M7 12h6.2M7 17.7h6.2" stroke="#a9b1d6" stroke-width="0.8"/>
+    <path d="M18.4 6.3h1.3c.85 0 1.3.45 1.3 1.3V12c0 .85-.45 1.3-1.3 1.3h-1.3" stroke="#7dcfff" stroke-width="1.1"/>
+    <path d="M19.2 10.5 21 12l-1.8 1.5" stroke="#7dcfff" stroke-width="1.1"/>
+    <circle cx="5.8" cy="6.3" r="0.55" fill="#2ecc71"/><circle cx="5.8" cy="12" r="0.55" fill="#f1c40f"/><circle cx="5.8" cy="17.7" r="0.55" fill="#3d59a1"/>
+
+  </g>
+</svg>

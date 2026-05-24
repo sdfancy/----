@@ -13,12 +13,31 @@ option(SPRAY_ENABLE_MODBUS "Build Qt SerialBus Modbus TCP client transport." OFF
 set(SPRAY_DUCO_INCLUDE_DIR "" CACHE PATH "DUCO SDK include directory")
 set(SPRAY_DUCO_LIBRARY "" CACHE FILEPATH "DUCO SDK library")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Test Widgets Gui)
 if(SPRAY_ENABLE_MODBUS)
     find_package(Qt6 REQUIRED COMPONENTS SerialBus)
 endif()
 
 enable_testing()
+
+set(SPRAY_UI_SOURCES
+    src/ui/ApplicationHmiRunner.cpp
+    src/ui/MainWindow.cpp
+    src/ui/SnapshotProvider.cpp
+    src/ui/HmiCommandPort.cpp
+    src/ui/components/DeviceCardWidget.cpp
+    src/ui/components/FlowMonitorWidget.cpp
+    src/ui/models/QueueTableModel.cpp
+    src/ui/pages/OverviewPage.cpp
+)
+qt_add_resources(UI_RESOURCES resources/ui.qrc)
+add_library(SprayHmiShell STATIC
+    ${SPRAY_UI_SOURCES}
+    ${UI_RESOURCES}
+)
+target_include_directories(SprayHmiShell PRIVATE src src/ui)
+target_link_libraries(SprayHmiShell PRIVATE Qt6::Widgets Qt6::Gui Qt6::Core Qt6::Network)
+
 
 set(SPRAY_COMMON_SOURCES
     src/app/Application.cpp
@@ -62,7 +81,7 @@ qt_add_executable(spray_control
 )
 
 target_include_directories(spray_control PRIVATE src)
-target_link_libraries(spray_control PRIVATE Qt6::Core Qt6::Network)
+target_link_libraries(spray_control PRIVATE Qt6::Core Qt6::Network Qt6::Widgets Qt6::Gui SprayHmiShell)
 target_compile_definitions(spray_control PRIVATE
     SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>
     SPRAY_ENABLE_MODBUS=$<BOOL:${SPRAY_ENABLE_MODBUS}>)

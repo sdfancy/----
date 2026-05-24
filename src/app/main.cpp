@@ -46,12 +46,29 @@ CommandLine parseCommandLine(QCoreApplication& app)
 
 } // namespace
 
+#include <QApplication>
+#include <QScopedPointer>
+#include "ui/ApplicationHmiRunner.h"
+
 int main(int argc, char* argv[])
 {
-    QCoreApplication app(argc, argv);
+    bool headless = false;
+    for (int i = 1; i < argc; ++i) {
+        if (QString::fromLocal8Bit(argv[i]) == "--headless") {
+            headless = true;
+            break;
+        }
+    }
+
+    QScopedPointer<QCoreApplication> app;
+    if (headless) {
+        app.reset(new QCoreApplication(argc, argv));
+    } else {
+        app.reset(new QApplication(argc, argv));
+    }
     QCoreApplication::setApplicationName(QStringLiteral("spray_control"));
 
-    const auto commandLine = parseCommandLine(app);
+    const auto commandLine = parseCommandLine(*app);
     QString error;
     const auto config = spray::config::AppConfig::load(commandLine.configPath, &error);
     if (!error.isEmpty()) {
@@ -80,15 +97,15 @@ int main(int argc, char* argv[])
     qInfo().noquote() << "plc.enqueue" << config.plc.host << config.plc.enqueuePort;
     qInfo().noquote() << "plc.dequeue" << config.plc.host << config.plc.dequeuePort;
 
-    spray::app::Application application(config, simulateRobot);
-    if (!application.initialize(&error)) {
+    auto application = std::make_shared<spray::app::Application>(config, simulateRobot);
+    if (!application->initialize(&error)) {
         qCritical().noquote() << "initialize failed:" << error;
         return 3;
     }
-    if (!application.start(&error)) {
+    if (!application->start(&error)) {
         qCritical().noquote() << "start failed:" << error;
         return 4;
     }
 
-    return app.exec();
+    return spray::ui::ApplicationHmiRunner::run(*app, application, commandLine.headless);
 }

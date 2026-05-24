@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Menu Simulator</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <rect x="5" y="5" width="14" height="14" rx="2" fill="#1f2335" stroke="#414868" stroke-width="1"/>
+    <path d="M8 12.3c1.15-3.2 2.3-3.2 3.45 0s2.3 3.2 3.45 0c.42-1.15.84-1.95 1.25-2.35" stroke="#7dcfff" stroke-width="1.1"/>
+    <path d="M8.2 15.7h7.6M8.2 8.2h2.4" stroke="#a9b1d6" stroke-width="0.75"/>
+    <path d="M3 7h2M3 10h2M3 13h2M3 16h2M19 7h2M19 10h2M19 13h2M19 16h2" stroke="#565f89" stroke-width="0.8"/>
+    <path d="M17.1 7.4l1.4.85-1.4.85z" fill="#2ecc71" stroke="#9cffc4" stroke-width="0.4"/>
+    <circle cx="8.2" cy="8.2" r="0.55" fill="#f1c40f"/>
+
+  </g>
+</svg>

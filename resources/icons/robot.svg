@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Robot Arm</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <path d="M5 18.4h8.2l1.3 2.2H3.7L5 18.4z" fill="#1f2335" stroke="#414868" stroke-width="1"/>
+    <circle cx="9.2" cy="16.2" r="2.2" fill="#24283b" stroke="#7dcfff" stroke-width="0.9"/>
+    <path d="M10.7 14.6 14 10.3" stroke="#a9b1d6" stroke-width="2.1"/>
+    <circle cx="15" cy="9" r="2" fill="#24283b" stroke="#7dcfff" stroke-width="0.9"/>
+    <path d="M16.8 8.2 19.8 6" stroke="#a9b1d6" stroke-width="1.8"/>
+    <path d="M20.3 5.6l1.1-1.5M20.1 6.4l1.5.9" stroke="#2ecc71" stroke-width="1"/>
+    <circle cx="9.2" cy="16.2" r="0.75" fill="#3d59a1"/><circle cx="15" cy="9" r="0.7" fill="#3d59a1"/>
+    <path d="M6.1 18.4v-2.2M12.3 18.4v-2.2" stroke="#565f89" stroke-width="0.75"/>
+
+  </g>
+</svg>

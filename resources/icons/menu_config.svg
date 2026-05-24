@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Menu Configuration</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <path d="M12 3.2l1.1.45.45 1.95c.38.14.73.3 1.06.5l1.72-1.06 1.04.96-.86 1.84c.22.32.4.67.55 1.04l1.95.63.16 1.4-1.75 1.02c-.03.42-.1.83-.22 1.22l1.26 1.58-.72 1.22-2.03-.42c-.3.28-.63.53-.99.73l-.22 2.05-1.34.48-1.35-1.55c-.42.04-.84.03-1.24-.04l-1.45 1.43-1.3-.58-.08-2.05c-.34-.23-.65-.5-.93-.8l-2.05.25-.63-1.27 1.39-1.48c-.1-.4-.15-.81-.15-1.23L3.6 10.2l.28-1.38 2.02-.45c.17-.36.38-.7.62-1.01L5.8 5.46l1.13-.86 1.62 1.18c.36-.18.74-.32 1.14-.41l.62-1.9L12 3.2z" fill="#1f2335" stroke="#565f89" stroke-width="0.65"/>
+    <circle cx="12" cy="11.7" r="3.3" fill="#24283b" stroke="#7dcfff" stroke-width="1"/>
+    <circle cx="12" cy="11.7" r="1.25" fill="#3d59a1" stroke="#a9b1d6" stroke-width="0.55"/>
+    <path d="M5 20h14M7 18.1v3.2M12 18.1v3.2M17 18.1v3.2" stroke="#414868" stroke-width="0.75"/>
+
+  </g>
+</svg>

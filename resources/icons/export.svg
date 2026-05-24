@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>Export Log</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <path d="M6 5.2h8.2l3.8 3.8v10.2H6z" fill="#1f2335" stroke="#414868" stroke-width="1"/>
+    <path d="M14.2 5.2v4H18" fill="#24283b" stroke="#565f89" stroke-width="0.75"/>
+    <path d="M12 16V9" stroke="#7dcfff" stroke-width="1.2"/>
+    <path d="M9.5 11.4 12 9l2.5 2.4" stroke="#7dcfff" stroke-width="1.2"/>
+    <path d="M8.3 17h7.4" stroke="#2ecc71" stroke-width="1.2"/>
+    <path d="M8.5 13.5h-3v5.7h13v-5.7h-3" stroke="#565f89" stroke-width="0.8"/>
+
+  </g>
+</svg>

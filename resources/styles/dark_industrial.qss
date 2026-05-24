@@ -1,0 +1,72 @@
+/* 全局背景与字体 */
+* {
+    background-color: #1a1b26; /* 暗色深蓝/藏青底色 */
+    color: #a9b1d6;            /* 主要浅色文字 */
+    font-family: "Consolas", "Courier New", monospace; /* Using system monospace instead of Roboto as agreed */
+    font-size: 14px;
+}
+
+/* 顶部与底部状态栏 */
+QToolBar, QStatusBar {
+    background-color: #16161E;
+    border-bottom: 1px solid #292e42;
+    border-top: 1px solid #292e42;
+}
+
+/* 表格组件样式 (QTableView) */
+QTableView {
+    background-color: #24283b;
+    gridline-color: #414868;
+    selection-background-color: #3d59a1;
+    border: none;
+}
+QHeaderView::section {
+    background-color: #1f2335;
+    color: #c0caf5;
+    padding: 4px;
+    border: 1px solid #414868;
+    font-weight: bold;
+}
+
+/* 卡片容器样式 (DeviceCardWidget 内部) */
+QWidget#CardBackground {
+    background-color: #24283b;
+    border-radius: 6px;
+    border: 1px solid #292e42;
+}
+
+/* 按钮样式 */
+QPushButton {
+    background-color: #24283b;
+    color: #c0caf5;
+    border: 1px solid #414868;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+QPushButton:hover {
+    background-color: #3d59a1;
+}
+QPushButton:pressed {
+    background-color: #2ac3de;
+    color: #1a1b26;
+}
+
+/* 危险按钮 */
+QPushButton#BtnStop {
+    background-color: #f7768e;
+    color: #1a1b26;
+    border: none;
+}
+QPushButton#BtnStop:hover {
+    background-color: #db4b4b;
+}
+
+/* 成功按钮 */
+QPushButton#BtnStart {
+    background-color: #9ece6a;
+    color: #1a1b26;
+    border: none;
+}
+QPushButton#BtnStart:hover {
+    background-color: #73daca;
+}

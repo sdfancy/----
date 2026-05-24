@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" shape-rendering="geometricPrecision">
+  <title>PLC Rack</title>
+  <defs>
+    <linearGradient id="steel" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30364f"/>
+      <stop offset="1" stop-color="#171923"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="4" y1="3" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.48" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="rail" x1="4" y1="5" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#414868"/>
+      <stop offset="1" stop-color="#202437"/>
+    </linearGradient>
+  </defs>
+  <g stroke-linecap="round" stroke-linejoin="round">
+
+    <rect x="3.5" y="5" width="17" height="14" rx="1.6" fill="#1f2335" stroke="#414868" stroke-width="1"/>
+    <path d="M6 7.5h12v3.2H6zM6 13h12v3.2H6z" fill="#24283b" stroke="#565f89" stroke-width="0.65"/>
+    <path d="M8 8.95h5.2M8 14.45h5.2" stroke="#a9b1d6" stroke-width="0.7"/>
+    <circle cx="16" cy="8.95" r="0.7" fill="#2ecc71"/><circle cx="17.7" cy="8.95" r="0.7" fill="#e74c3c"/>
+    <circle cx="16" cy="14.45" r="0.7" fill="#f1c40f"/><circle cx="17.7" cy="14.45" r="0.7" fill="#2ecc71"/>
+    <path d="M7 3.3v1.7M10 3.3v1.7M13 3.3v1.7M16 3.3v1.7M7 19v1.7M10 19v1.7M13 19v1.7M16 19v1.7" stroke="#565f89" stroke-width="0.75"/>
+
+  </g>
+</svg>
