@@ -1,9 +1,9 @@
 ---
 doc_type: requirement
 slug: camera-flow-parity
-status: draft
+status: current
 created: 2026-05-23
-last_reviewed: 2026-05-23
+last_reviewed: 2026-05-24
 tags: [camera, plc, queue, parity]
 ---
 
@@ -23,8 +23,10 @@ tags: [camera, plc, queue, parity]
 
 - 保留 PLC `9999` 入队通道字段顺序。
 - 保留相机 `9001/9002` 默认端口和 legacy 单相机客户端模式。
+- 支持 dual camera `11 -> READY -> 12 -> 3D -> Done` 和 legacy 单相机 sequential/counted 两种匹配。
 - 本能力只补入队和相机数据入队，不接真实 DUCO 运动、不做 HMI、不做 Modbus。
 
 ## 4. 变更日志
 
 - 2026-05-23：起草 draft，关联 feature `2026-05-23-camera-flow-parity`。
+- 2026-05-24：实现并验收 C++ 相机入队 parity，状态升级为 current。

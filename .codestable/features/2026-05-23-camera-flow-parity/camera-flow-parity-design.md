@@ -69,13 +69,14 @@ tags: [camera, plc, queue, parity]
 #### 变化
 
 - 新增相机配置：
-  - `CameraConfig { host, camera2dPort, camera3dPort, camera3dEnabled, legacyHost, legacyPort, flowMode }`
+  - `CameraConfig { host, camera2dPort, camera3dPort, camera3dEnabled, legacyHost, legacyPort, flowMode, correlationMode, countExtractMode }`
 - 新增相机协议值对象：
-  - `CameraFrame { cameraKey, raw }`
   - `Parsed2dFrame { kind, count, partType }`
   - `Parsed3dSegment { armId, count, payload }`
+  - `FrameDrainResult { frames, remaining }`
 - 新增入队流程状态：
   - `EnqueueCycle { count, pointer, readyReceived, endReceived, partType, armReady, doneSent }`
+  - `LegacyCameraWorkflow` 内部等待槽 `WaitingSlot { count, pointer }`
 
 #### 接口示例
 

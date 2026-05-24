@@ -206,7 +206,7 @@ RobotSnapshot robotSnapshot(int armId)
 ## 5. 子 feature 清单
 
 1. **cpp-minimal-loop**（done，feature `2026-05-23-cpp-minimal-loop`）— CMake/Qt 项目骨架、PLC 双端口、队列核心、fake robot 执行器，跑通指针到 `XN/XD` 的最小闭环。
-2. **camera-flow-parity** — 复刻 legacy 单相机和 dual camera 入队流程，保证相机数据入队与默认值策略一致。
+2. **camera-flow-parity**（done，feature `2026-05-23-camera-flow-parity`）— 复刻 legacy 单相机和 dual camera 入队流程，保证相机数据入队与默认值策略一致。
 3. **duco-sdk-adapter** — 封装 DUCO C++ 远程 API、连接、心跳、上电使能、状态读取和任务控制。
 4. **duco-task-executor** — 把队列 payload 转成喷涂任务并调用 DUCO 运动接口执行。
 5. **qt-hmi-shell** — Qt Widgets HMI 页面、表格模型、设备状态和操作命令设计落地。
@@ -233,3 +233,4 @@ RobotSnapshot robotSnapshot(int armId)
 
 - 2026-05-23：创建 C++ 喷涂控制新项目 roadmap 初稿。
 - 2026-05-23：完成 `cpp-minimal-loop`，最小闭环进入 done。
+- 2026-05-24：完成 `camera-flow-parity`，相机入队流程进入 done。

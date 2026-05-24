@@ -32,45 +32,45 @@ steps:
 checks:
   - id: check-no-duco
     title: 本 feature 不引入 DUCO SDK 或真实机械臂控制
-    status: pending
+    status: passed
     source: design 1 明确不做
   - id: check-no-widgets-modbus
     title: 本 feature 不引入 Qt Widgets HMI 或 Modbus
-    status: pending
+    status: passed
     source: design 1 明确不做
   - id: check-plc-contract
     title: PLC 9999/9090 字段顺序、端口和出队反馈 XN/XD 不变
-    status: pending
+    status: passed
     source: design 1 和 design 3 反向核对项
   - id: check-camera-contract
     title: 2D READY/result 与 3D (...)EA(...)E 外部格式不变
-    status: pending
+    status: passed
     source: design 1 明确不做和 design 2.1 接口示例
   - id: check-queue-manager-boundary
     title: QueueManager 不承载相机状态机，只保存 camera payload
-    status: pending
+    status: passed
     source: design 1 关键决策和 design 3 反向核对项
   - id: check-nonblocking-callbacks
     title: PLC 和相机 socket 回调不阻塞等待对方返回
-    status: pending
+    status: passed
     source: design 2.2 流程级约束
   - id: check-ready-idempotency
     title: READY 窗口内重复 READY 不重复发送 2D 请求
-    status: pending
+    status: passed
     source: design 3 关键场景 3
   - id: check-fallback-and-late-2d
     title: 12 无 2D 类型时发送 00,00 且晚到 2D 被丢弃
-    status: pending
+    status: passed
     source: design 3 关键场景 5
   - id: check-done-once-after-both-arms
     title: arm1/arm2 都写入 3D payload 后 Done 只发送一次
-    status: pending
+    status: passed
     source: design 2.2 流程级约束和 design 3 关键场景 6
   - id: check-3d-framing
     title: 3D 半包保留等待补齐，非法 segment 只记录 WARN 不崩溃
-    status: pending
+    status: passed
     source: design 3 关键场景 7
   - id: check-legacy-mode-ports
     title: legacy 单相机模式不启动 dual 9001/9002 服务
-    status: pending
+    status: passed
     source: design 3 关键场景 8
