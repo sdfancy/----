@@ -30,6 +30,10 @@
 - ArmPayload：robot 层从 `(flag,count,...)E` 解析出的机械臂 payload，包含 arm、count、默认空任务和运动数值。
 - MotionSegment：robot 层中立运动段，当前覆盖 `movej_pose2`、`movel`、末端 IO 和控制柜 IO。
 - MotionRecipe：每个 arm 的最小喷涂任务配置，包含工具/工件坐标、速度、加速度、喷枪 IO 和字段映射。
+- FieldConfig：现场配置文件集合，当前包含 `[robot].recipe_path` 指向的 motion recipe 文件。
+- MotionRecipeTable：robot 层独立配置表，从 `config/motion_recipes.toml` 加载、校验并按 arm 查询 `MotionRecipe`。
+- PoseFieldMapping：recipe 中 `pose_indices` 定义的 6 个 payload 数值索引，规划时映射为 `Pose6d`。
+- SprayIoConfig：recipe 中 `spray_io` 和 `spray_io_channel` 定义的喷枪 IO 类型与通道。
 - PlannedRobotTask：`core::RobotTask` 加 `MotionSegment` 序列后的 robot 内部执行形态。
 - DUCO motion worker：按 arm 串行执行 motion client 阻塞调用的 worker，controller 只做规划和调度粘合。
 
@@ -43,6 +47,7 @@
 - 已落地 DUCO 任务执行基础：`QueueManager raw payload -> MotionPlanner -> DucoMotionWorker -> DUCO motion client -> XN/XD`
 - 已落地 Modbus 旁路预留：`config -> ModbusAddressTable -> PlcModbusClient -> optional Qt SerialBus transport`
 - 已落地诊断日志基础：`Application signals -> DiagnosticsService -> EventLog + DeviceHealthRegistry + RawFrameFileSink`
+- 已落地现场 recipe 配置：`config -> MotionRecipeTable -> DucoRobotController::setMotionRecipe -> MotionPlanner`
 - 相机协议说明：`.codestable/architecture/protocol-camera.md`
 
 ### 3.1 已落地最小闭环
@@ -95,6 +100,15 @@
 - `diagnostics`：`DeviceSimulator` 通过公开 TCP 端口复现 PLC enqueue/dequeue 和 dual camera `11 -> READY -> 12 -> 3D -> Done`，用于本地联调和集成测试。
 - `app`：`Application` 暴露 `events(filter)`、`deviceHealthSnapshot()` 和 `flushDiagnostics()` 只读入口，后续 HMI 消费快照，不直接读取设备对象或队列私有容器。
 
+### 3.7 已落地现场 recipe 配置
+
+- `config`：`RobotConfig::recipePath` 默认指向 `config/motion_recipes.toml`，`AppConfig` 只保存路径，不解析 recipe 数组。
+- `robot`：`MotionRecipeTable` 加载 TOML-like `[[recipes]]`，校验 arm1/arm2、重复 arm、字段映射、速度、加速度和喷枪 IO。
+- `config`：`config/motion_recipes.toml` 只提供 arm1/arm2 示例 recipe，真实现场字段、速度、坐标系和 IO 必须现场替换。
+- `app`：DUCO 模式初始化时加载 recipe table，并把每条 recipe 注入 `DucoRobotController::setMotionRecipe()`；加载失败直接让 initialize 失败。
+- `robot/duco`：非默认任务仍由 `MotionPlanner` 消费 `MotionRecipe` 规划，缺失或 disabled recipe 只 warning 和 `taskFinished(false)`，不发送正常 `XD`。
+- `robot/fake`：fake robot 和默认空任务不依赖 recipe 文件。
+
 ## 4. 关键架构决定
 
 - 当前阶段不修改 PLC 与相机外部通讯流程。
@@ -102,6 +116,7 @@
 - 机械臂侧不再依赖示教器程序的 `data/1` TCP 协议，改为软件通过 DUCO 远程 API 主动执行喷涂任务。
 - `core::DequeueCoordinator` 只依赖 `robot::IRobotController`，不得直接依赖 fake 或 DUCO SDK 类型。
 - `core::RobotTask` 保留 raw payload，payload 解析、运动规划、recipe 校验和 DUCO motion 调用都在 robot 层完成。
+- 现场 recipe 参数必须来自配置文件或测试注入，不得把真实字段映射、速度、坐标系或喷枪 IO 硬编码到 C++ 代码。
 - `taskFinished(ok=false)` 代表任务失败或安全拒绝，不得发送正常 `XD`；当前不新增 PLC 错误反馈码。
 - HMI 建议使用 Qt Widgets；通讯层使用 Qt Network，预留 Modbus 使用 Qt SerialBus。
 - Modbus 是默认禁用的旁路能力；Smart200 地址只能来自地址表配置，不能写入业务代码。
@@ -114,9 +129,9 @@
 - dual camera `Done` 对同一 count 只发送一次，且必须 arm1/arm2 的 3D payload 都写入队列。
 - DUCO API 多线程调用必须隔离对象：阻塞运动、任务控制、心跳不得共享同一个 `DucoCobot` 对象。
 - DUCO `open()` 未成功前禁止上电、使能、任务控制和运动；任一 DUCO 调用返回 `-1` 进入 faulted 并发 warning，不伪造成任务完成。
-- 非默认 DUCO 任务没有有效 `MotionRecipe` 时必须拒绝执行；现场 recipe 文件、真实字段映射和喷枪接线由后续 `field-config-and-recipes` 完成。
+- 非默认 DUCO 任务没有有效 `MotionRecipe` 时必须拒绝执行；现场 recipe 文件必须同时配置 arm1/arm2，真实字段映射和喷枪接线由现场替换示例参数。
 - `PlcEndpoint` 不 include 或持有 `PlcModbusClient`；Modbus 写入不得触发队列、相机流程或 DUCO motion。
 - diagnostics 只采集事件、健康状态和日志，不得调用 `QueueManager` 写接口或触发 DUCO motion。
 - socket 回调不得直接做阻塞文件写入；diagnostics 文件持久化必须走队列和 flush。
-- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础、Modbus 旁路预留和诊断日志基础；仍不包含完整现场 recipe 管理和真实硬件验收。
+- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础、Modbus 旁路预留、诊断日志基础和现场 recipe 文件化配置；仍不包含真实硬件验收。
 - Windows/Qt MinGW 构建在中文源码路径下不能把构建目录放在项目内，Qt `moc` 会失败；使用 ASCII 构建目录。

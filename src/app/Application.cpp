@@ -2,6 +2,7 @@
 
 #include "diagnostics/DiagnosticCodes.h"
 #include "protocol/ByteCodec.h"
+#include "robot/MotionRecipeTable.h"
 #include "protocol/PlcProtocol.h"
 #include "robot/duco/DucoClientFactory.h"
 #include "robot/duco/DucoRobotController.h"
@@ -76,9 +77,21 @@ bool Application::initialize(QString* errorMessage)
             config_.fakeRobot.finishDelayMs);
     } else {
         auto factory = robot::duco::createDucoClientFactory(config_.robot);
-        robot_ = std::make_unique<robot::duco::DucoRobotController>(
+        auto ducoController = std::make_unique<robot::duco::DucoRobotController>(
             config_.robot,
             std::move(factory));
+        QString recipeError;
+        const auto recipes = robot::MotionRecipeTable::load(config_.robot.recipePath, &recipeError);
+        if (!recipeError.isEmpty()) {
+            if (errorMessage) {
+                *errorMessage = recipeError;
+            }
+            return false;
+        }
+        for (const auto& recipe : recipes.recipes()) {
+            ducoController->setMotionRecipe(recipe);
+        }
+        robot_ = std::move(ducoController);
     }
     dequeueCoordinator_ = std::make_unique<core::DequeueCoordinator>(
         queueManager_.get(),

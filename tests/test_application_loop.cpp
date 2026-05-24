@@ -2,11 +2,49 @@
 
 #include "app/Application.h"
 
+#include <QFile>
+#include <QTemporaryDir>
 #include <QTcpSocket>
 #include <QtTest/QtTest>
 
 using spray::app::Application;
 using spray::config::AppConfig;
+
+namespace {
+
+QString writeValidRecipes(QTemporaryDir& dir)
+{
+    const QString path = dir.filePath(QStringLiteral("motion_recipes.toml"));
+    QFile file(path);
+    const bool opened = file.open(QIODevice::WriteOnly | QIODevice::Text);
+    Q_ASSERT(opened);
+    file.write(R"toml(
+[[recipes]]
+arm_id = 1
+enabled = true
+q_near = [0, 0, 0, 0, 0, 0]
+pose_indices = [0, 1, 2, 3, 4, 5]
+approach_speed = 0.5
+line_speed = 0.25
+acceleration = 0.8
+spray_io = "tool"
+spray_io_channel = 2
+
+[[recipes]]
+arm_id = 2
+enabled = true
+q_near = [0, 0, 0, 0, 0, 0]
+pose_indices = [0, 1, 2, 3, 4, 5]
+approach_speed = 0.5
+line_speed = 0.25
+acceleration = 0.8
+spray_io = "tool"
+spray_io_channel = 3
+)toml");
+    return path;
+}
+
+} // namespace
 
 class ApplicationLoopTest final : public QObject {
     Q_OBJECT
@@ -157,8 +195,11 @@ private slots:
 
     void ducoModeWithoutSdkFailsStart()
     {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         AppConfig config;
         config.robot.mode = spray::config::RobotMode::Duco;
+        config.robot.recipePath = writeValidRecipes(dir);
 
         Application app(config, false);
         QString error;
@@ -166,6 +207,19 @@ private slots:
         QVERIFY2(app.initialize(&error), qPrintable(error));
         QVERIFY(!app.start(&error));
         QCOMPARE(error, QStringLiteral("DUCO open failed"));
+    }
+
+    void ducoModeRejectsMissingRecipeFile()
+    {
+        AppConfig config;
+        config.robot.mode = spray::config::RobotMode::Duco;
+        config.robot.recipePath = QStringLiteral("missing/motion_recipes.toml");
+
+        Application app(config, false);
+        QString error;
+
+        QVERIFY(!app.initialize(&error));
+        QVERIFY(error.contains(QStringLiteral("cannot open motion recipe table")));
     }
 };
 

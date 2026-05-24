@@ -188,6 +188,8 @@ AppConfig AppConfig::load(const QString& path, QString* errorMessage)
                 config.robot.autoPowerOn = parseBool(value, config.robot.autoPowerOn);
             } else if (key == QStringLiteral("auto_enable")) {
                 config.robot.autoEnable = parseBool(value, config.robot.autoEnable);
+            } else if (key == QStringLiteral("recipe_path")) {
+                config.robot.recipePath = unquote(value);
             }
         } else if (section == QStringLiteral("camera")) {
             if (key == QStringLiteral("host")) {
@@ -265,7 +267,10 @@ bool AppConfig::validate(QString* errorMessage) const
         }
         return false;
     }
-    if (robot.port == 0 || robot.heartbeatMs <= 0 || robot.ip.trimmed().isEmpty()) {
+    if (robot.port == 0
+        || robot.heartbeatMs <= 0
+        || robot.ip.trimmed().isEmpty()
+        || robot.recipePath.trimmed().isEmpty()) {
         if (errorMessage) {
             *errorMessage = QStringLiteral("robot config is invalid");
         }

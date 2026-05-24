@@ -11,6 +11,7 @@
 #include "test_legacy_camera_workflow.h"
 #include "test_modbus_address_table.h"
 #include "test_motion_planner.h"
+#include "test_motion_recipe_table.h"
 #include "test_plc_modbus_client.h"
 #include "test_plc_endpoint.h"
 #include "test_plc_protocol.h"
@@ -56,6 +57,7 @@ int main(int argc, char** argv)
     status |= runTest(createLegacyCameraWorkflowTest(), QStringLiteral("legacy-camera-workflow.txt"));
     status |= runTest(createModbusAddressTableTest(), QStringLiteral("modbus-address-table.txt"));
     status |= runTest(createMotionPlannerTest(), QStringLiteral("motion-planner.txt"));
+    status |= runTest(createMotionRecipeTableTest(), QStringLiteral("motion-recipe-table.txt"));
     status |= runTest(createPlcModbusClientTest(), QStringLiteral("plc-modbus-client.txt"));
     status |= runTest(createPlcEndpointTest(), QStringLiteral("plc-endpoint.txt"));
     status |= runTest(createPlcProtocolTest(), QStringLiteral("plc-protocol.txt"));

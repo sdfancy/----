@@ -1,15 +1,19 @@
 #include "test_duco_robot_controller.h"
 
+#include "robot/MotionRecipeTable.h"
 #include "robot/duco/DucoRobotController.h"
 
+#include <QFile>
 #include <QHash>
 #include <QSharedPointer>
+#include <QTemporaryDir>
 #include <QtTest/QtTest>
 
 using spray::config::RobotConfig;
 using spray::core::RobotTask;
 using spray::robot::Joint6d;
 using spray::robot::MotionRecipe;
+using spray::robot::MotionRecipeTable;
 using spray::robot::MotionSegmentType;
 using spray::robot::Pose6d;
 using spray::robot::duco::DucoClientRole;
@@ -193,6 +197,44 @@ RobotTask robotTask(int armId, quint16 count, const QByteArray& payload, bool de
     return task;
 }
 
+QString writeRecipeFile(QTemporaryDir& dir)
+{
+    const QString path = dir.filePath(QStringLiteral("motion_recipes.toml"));
+    QFile file(path);
+    const bool opened = file.open(QIODevice::WriteOnly | QIODevice::Text);
+    Q_ASSERT(opened);
+    file.write(R"toml(
+[[recipes]]
+arm_id = 1
+enabled = true
+tool = "spray_tool"
+wobj = "station"
+q_near = [0, 0, 0, 0, 0, 0]
+pose_indices = [0, 1, 2, 3, 4, 5]
+approach_speed = 0.5
+line_speed = 0.25
+acceleration = 0.8
+radius = 0.01
+spray_io = "tool"
+spray_io_channel = 2
+
+[[recipes]]
+arm_id = 2
+enabled = true
+tool = "spray_tool"
+wobj = "station"
+q_near = [0, 0, 0, 0, 0, 0]
+pose_indices = [0, 1, 2, 3, 4, 5]
+approach_speed = 0.5
+line_speed = 0.25
+acceleration = 0.8
+radius = 0.01
+spray_io = "tool"
+spray_io_channel = 3
+)toml");
+    return path;
+}
+
 } // namespace
 
 class DucoRobotControllerTest final : public QObject {
@@ -365,6 +407,35 @@ private slots:
             QStringLiteral("motion.setToolDigitalOut:2:0:1"),
         };
         QCOMPARE(state->calls, expected);
+    }
+
+    void configuredRecipeExecutesPlannedMotionSequence()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QString error;
+        const auto table = MotionRecipeTable::load(writeRecipeFile(dir), &error);
+        QVERIFY2(error.isEmpty(), qPrintable(error));
+
+        auto state = QSharedPointer<RecordingState>::create();
+        RobotConfig config;
+        DucoRobotController controller(config, std::make_unique<RecordingFactory>(state));
+        QVERIFY(controller.prepare().ok);
+        for (const auto& recipe : table.recipes()) {
+            controller.setMotionRecipe(recipe);
+        }
+        state->calls.clear();
+
+        bool finishedOk = false;
+        connect(&controller, &DucoRobotController::taskFinished, this,
+                [&finishedOk](const RobotTask&, bool ok, const QString&) { finishedOk = ok; });
+
+        controller.enqueueTask(robotTask(
+            1, 123, QByteArray("(1001,123,0.49,0.14,0.44,-1.14,0,-1.57)E")));
+
+        QTRY_VERIFY(finishedOk);
+        QVERIFY(state->calls.contains(QStringLiteral("motion.moveJPose2:0.5:0.8:0.01:1")));
+        QVERIFY(state->calls.contains(QStringLiteral("motion.moveL:0.25:0.8:0.01:1")));
     }
 
     void missingRecipeFailsWithoutAcceptedOrMotion()

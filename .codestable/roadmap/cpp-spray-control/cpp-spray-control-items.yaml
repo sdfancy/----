@@ -61,8 +61,8 @@ items:
   - slug: field-config-and-recipes
     description: 现场配置、机械臂 recipe、点位字段映射、喷枪 IO 和速度参数
     depends_on: [duco-task-executor]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-field-config-and-recipes
     minimal_loop: false
     notes: 需要现场确认相机 payload 字段含义和喷枪 IO 接线
 

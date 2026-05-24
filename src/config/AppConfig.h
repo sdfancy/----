@@ -34,6 +34,7 @@ struct RobotConfig {
     bool prepareOnStart = false;
     bool autoPowerOn = true;
     bool autoEnable = true;
+    QString recipePath = QStringLiteral("config/motion_recipes.toml");
 };
 
 enum class CameraFlowMode {

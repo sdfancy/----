@@ -1,0 +1,78 @@
+feature: 2026-05-24-field-config-and-recipes
+created: 2026-05-24
+
+steps:
+  - action: "配置路径：扩展 [robot] recipe_path，默认指向 config/motion_recipes.toml"
+    exit_signal: "AppConfig 测试覆盖 recipe_path 解析和默认值。"
+    status: done
+  - action: "recipe table：实现 MotionRecipeTable 加载、校验和查询"
+    exit_signal: "测试覆盖合法 arm1/arm2、重复 arm、非法 mapping、非法速度和非法 IO。"
+    status: done
+  - action: "示例配置：新增 motion recipes 示例文件"
+    exit_signal: "示例能被 loader 读取，且注释明确现场替换。"
+    status: done
+  - action: "Application 注入：DUCO 模式加载 recipe table 并注入 controller"
+    exit_signal: "测试证明 configured recipe 能让非默认任务规划，缺失 recipe 仍拒绝。"
+    status: done
+  - action: "范围守护：复跑 robot/app/config 测试和协议 grep"
+    exit_signal: "PLC、相机、Modbus、Qt Widgets 行为无变更。"
+    status: done
+
+checks:
+  - item: "RobotConfig 包含 recipePath，默认 config/motion_recipes.toml"
+    source: 名词契约
+    status: passed
+  - item: "MotionRecipeTable 能加载 [[recipes]] 并按 armId 查询 MotionRecipe"
+    source: 名词契约
+    status: passed
+  - item: "MotionRecipeTable 校验重复 arm、缺失 arm、pose_indices 非 6 个、负数索引、非法速度和非法 IO"
+    source: 名词契约
+    status: passed
+  - item: "config/motion_recipes.toml 提供 arm1/arm2 示例并提示现场替换"
+    source: 挂载点
+    status: passed
+  - item: "Application 在 DUCO 模式加载 recipe table 并调用 setMotionRecipe"
+    source: 编排骨架
+    status: passed
+  - item: "fake robot 和默认空任务不依赖 recipe 文件"
+    source: 流程级约束
+    status: passed
+  - item: "DUCO 非默认任务缺 recipe 或 recipe disabled 时 warning 且 taskFinished(false)，不发正常 XD"
+    source: 流程级约束
+    status: passed
+  - item: "MotionPlanner 继续只消费 MotionRecipe，不感知文件格式"
+    source: 编排骨架
+    status: passed
+  - item: "合法 recipe 文件能返回两个 enabled recipe，可按 arm 查询"
+    source: 验收场景
+    status: passed
+  - item: "重复 arm_id 加载失败并提示 duplicate arm"
+    source: 验收场景
+    status: passed
+  - item: "非法 pose_indices 加载失败，不进入 DUCO controller"
+    source: 验收场景
+    status: passed
+  - item: "速度、加速度、spray_io、通道非法时加载失败或 planner 拒绝，warning 可观察"
+    source: 验收场景
+    status: passed
+  - item: "有效 payload + 配置 recipe 能规划并执行既有最小 motion 序列"
+    source: 验收场景
+    status: passed
+  - item: "默认空任务不依赖 recipe，不调用 DUCO motion/IO，仍安全 accepted/finished"
+    source: 验收场景
+    status: passed
+  - item: "不修改 PLC 9999/9090 字节格式、反馈码或端口默认值"
+    source: 范围守护
+    status: passed
+  - item: "不修改相机 legacy/dual camera 外部协议"
+    source: 范围守护
+    status: passed
+  - item: "不新增 Qt Widgets 配置页面或 HMI 代码"
+    source: 范围守护
+    status: passed
+  - item: "不把现场 recipe 字段塞进 core::RobotTask 或 QueueManager"
+    source: 范围守护
+    status: passed
+  - item: "不硬编码真实现场坐标、速度或喷枪 IO 到 C++ 代码"
+    source: 范围守护
+    status: passed

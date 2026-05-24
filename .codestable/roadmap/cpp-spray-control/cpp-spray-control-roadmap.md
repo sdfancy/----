@@ -75,7 +75,7 @@ C++ 喷涂控制系统
 ### robot · 新松机械臂控制
 
 - **职责**：封装 DUCO `DucoCobot`，按 arm_id 执行喷涂任务，管理心跳、上电使能、暂停恢复、停止、异常回收。
-- **承载的子 feature**：`duco-sdk-adapter`, `duco-task-executor`, `hardware-acceptance`
+- **承载的子 feature**：`duco-sdk-adapter`, `duco-task-executor`, `field-config-and-recipes`, `hardware-acceptance`
 - **触碰的现有代码 / 模块**：替换旧 `arm_controller.py` 的 TCP `data/1` 协议，不保留示教器依赖。
 
 ### ui · Qt HMI
@@ -212,7 +212,7 @@ RobotSnapshot robotSnapshot(int armId)
 5. **qt-hmi-shell**（done，feature `2026-05-24-qt-hmi-shell`）— Qt Widgets HMI 页面、表格模型、设备状态和操作命令设计方案。
 6. **modbus-plc-reservation**（done，feature `2026-05-24-modbus-plc-reservation`）— Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留。
 7. **diagnostics-and-logs**（done，feature `2026-05-24-diagnostics-and-logs`）— 原始通讯日志、事件历史、健康检查、错误码和测试模拟器。
-8. **field-config-and-recipes** — 现场配置、机械臂 recipe、点位字段映射、喷枪 IO 和速度参数。
+8. **field-config-and-recipes**（done，feature `2026-05-24-field-config-and-recipes`）— 现场配置、机械臂 recipe、点位字段映射、喷枪 IO 和速度参数。
 9. **hardware-acceptance** — 真实 PLC、相机、新松机械臂联调验收脚本和现场 checklist。
 
 **最小闭环**：第 1 条 `cpp-minimal-loop` 做完后，可以不用真实机械臂，使用 fake robot 验证 PLC 出队指针变化 -> 准备缓存 -> fake 执行 -> PLC 收到 `1N/1D/2N/2D`。
@@ -239,3 +239,4 @@ RobotSnapshot robotSnapshot(int armId)
 - 2026-05-24：完成 `qt-hmi-shell` design-only 方案，Qt HMI 页面、快照模型和命令边界进入 done。
 - 2026-05-24：完成 `modbus-plc-reservation`，Smart200 Modbus TCP 旁路客户端、地址表和默认禁用边界进入 done。
 - 2026-05-24：完成 `diagnostics-and-logs`，事件历史、raw/event JSONL、设备健康快照和本地模拟器进入 done。
+- 2026-05-24：完成 `field-config-and-recipes`，现场 recipe 文件化、字段映射、喷枪 IO 和 DUCO 注入进入 done。

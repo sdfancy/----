@@ -1,0 +1,29 @@
+# Example only; replace all values with validated site parameters before DUCO production use.
+
+[[recipes]]
+arm_id = 1
+enabled = true
+tool = "spray_tool_arm1"
+wobj = "station"
+q_near = [0, 0, 0, 0, 0, 0]
+pose_indices = [0, 1, 2, 3, 4, 5]
+approach_speed = 0.5
+line_speed = 0.25
+acceleration = 0.8
+radius = 0.01
+spray_io = "tool"
+spray_io_channel = 2
+
+[[recipes]]
+arm_id = 2
+enabled = true
+tool = "spray_tool_arm2"
+wobj = "station"
+q_near = [0, 0, 0, 0, 0, 0]
+pose_indices = [0, 1, 2, 3, 4, 5]
+approach_speed = 0.5
+line_speed = 0.25
+acceleration = 0.8
+radius = 0.01
+spray_io = "tool"
+spray_io_channel = 3

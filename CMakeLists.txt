@@ -41,6 +41,7 @@ set(SPRAY_COMMON_SOURCES
     src/protocol/CameraProtocol.cpp
     src/protocol/PlcProtocol.cpp
     src/robot/MotionPlanner.cpp
+    src/robot/MotionRecipeTable.cpp
     src/robot/duco/DucoClientFactory.cpp
     src/robot/duco/DucoClient.cpp
     src/robot/duco/DucoMotionWorker.cpp
@@ -89,6 +90,7 @@ qt_add_executable(spray_tests
     tests/test_legacy_camera_workflow.cpp
     tests/test_modbus_address_table.cpp
     tests/test_motion_planner.cpp
+    tests/test_motion_recipe_table.cpp
     tests/test_plc_endpoint.cpp
     tests/test_plc_modbus_client.cpp
     tests/test_plc_protocol.cpp

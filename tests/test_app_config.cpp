@@ -30,6 +30,7 @@ heartbeat_ms = 500
 prepare_on_start = true
 auto_power_on = false
 auto_enable = false
+recipe_path = "config/site_motion_recipes.toml"
 )toml");
         file.close();
 
@@ -43,7 +44,14 @@ auto_enable = false
         QVERIFY(config.robot.prepareOnStart);
         QVERIFY(!config.robot.autoPowerOn);
         QVERIFY(!config.robot.autoEnable);
+        QCOMPARE(config.robot.recipePath, QStringLiteral("config/site_motion_recipes.toml"));
         QVERIFY(config.validate(&error));
+    }
+
+    void keepsDefaultRecipePath()
+    {
+        const auto config = AppConfig::defaults();
+        QCOMPARE(config.robot.recipePath, QStringLiteral("config/motion_recipes.toml"));
     }
 
     void rejectsInvalidRobotConfig()
