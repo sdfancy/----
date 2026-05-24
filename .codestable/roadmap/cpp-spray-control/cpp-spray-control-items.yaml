@@ -37,8 +37,8 @@ items:
   - slug: qt-hmi-shell
     description: Qt Widgets HMI 页面、表格模型、设备状态和手动操作命令设计落地
     depends_on: [cpp-minimal-loop]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-qt-hmi-shell
     minimal_loop: false
     notes: 本 roadmap 只给界面方案，代码由后续 feature 或人工实现
 

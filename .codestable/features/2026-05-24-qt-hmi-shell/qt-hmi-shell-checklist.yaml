@@ -1,0 +1,45 @@
+feature: 2026-05-24-qt-hmi-shell
+created: 2026-05-24
+
+steps:
+  - action: "起草 Qt HMI 界面壳 requirement，明确本 item 只交付设计蓝图"
+    exit_signal: "requirement 写明不生成 src/ui 代码、不修改 CMakeLists.txt、不引入 Qt Widgets 链接项。"
+    status: done
+  - action: "完成 Qt HMI design 并标记 approved"
+    exit_signal: "design 覆盖页面结构、快照模型、命令边界、建议文件和函数职责。"
+    status: done
+  - action: "回写 roadmap item 进入 done"
+    exit_signal: "items.yaml 与 roadmap 主文档均标记 qt-hmi-shell 已完成方案交付。"
+    status: done
+  - action: "范围守护：确认本 item 未生成 UI 源码"
+    exit_signal: "git diff 只包含 .codestable 文档，不包含 src、tests、CMakeLists.txt。"
+    status: done
+
+checks:
+  - item: "design frontmatter 为 feature-design、status=approved，且关联 requirement 与 roadmap item"
+    source: 方案完整性
+    status: passed
+  - item: "requirement 明确当前 item 只输出界面设计和实现蓝图，不生成 Qt 界面代码"
+    source: 范围守护
+    status: passed
+  - item: "design 说明 Qt Widgets、总览首屏、快照只读、命令单向、危险命令二次确认"
+    source: 决策核对
+    status: passed
+  - item: "design 列出 MainWindow、SnapshotProvider、HmiCommandPort、QueueTableModel、EventLogModel 和各页面职责"
+    source: 名词契约
+    status: passed
+  - item: "design 说明 GUI 与 --headless 共存方式，headless 继续 QCoreApplication"
+    source: 编排骨架
+    status: passed
+  - item: "design 明确 UI 不直接写 QueueManager、不直接访问 socket、不暴露 DucoCobot"
+    source: 流程级约束
+    status: passed
+  - item: "design 明确不修改 PLC 9999/9090、相机流程或 DUCO 执行路径"
+    source: 范围守护
+    status: passed
+  - item: "design 明确不新增 Smart200 Modbus 实际读写，仅预留状态灯和配置入口"
+    source: 范围守护
+    status: passed
+  - item: "本 item 未改动 src、tests、CMakeLists.txt"
+    source: 反向核对
+    status: passed
