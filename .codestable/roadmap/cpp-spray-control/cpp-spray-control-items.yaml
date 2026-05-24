@@ -53,8 +53,8 @@ items:
   - slug: diagnostics-and-logs
     description: 原始通讯日志、事件历史、健康检查、错误码和测试模拟器
     depends_on: [cpp-minimal-loop, camera-flow-parity]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-diagnostics-and-logs
     minimal_loop: false
     notes: null
 

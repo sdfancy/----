@@ -67,6 +67,11 @@ struct CameraConfig {
 
 struct LoggingConfig {
     bool rawFrames = true;
+    QString logDir = QStringLiteral("logs");
+    bool persistRawFrames = false;
+    bool persistEvents = false;
+    int maxInMemoryEvents = 1000;
+    int flushIntervalMs = 1000;
 };
 
 struct ModbusConfig {

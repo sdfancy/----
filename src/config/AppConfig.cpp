@@ -212,6 +212,16 @@ AppConfig AppConfig::load(const QString& path, QString* errorMessage)
         } else if (section == QStringLiteral("logging")) {
             if (key == QStringLiteral("raw_frames")) {
                 config.logging.rawFrames = parseBool(value, config.logging.rawFrames);
+            } else if (key == QStringLiteral("log_dir")) {
+                config.logging.logDir = unquote(value);
+            } else if (key == QStringLiteral("persist_raw_frames")) {
+                config.logging.persistRawFrames = parseBool(value, config.logging.persistRawFrames);
+            } else if (key == QStringLiteral("persist_events")) {
+                config.logging.persistEvents = parseBool(value, config.logging.persistEvents);
+            } else if (key == QStringLiteral("max_in_memory_events")) {
+                config.logging.maxInMemoryEvents = parseInt(value, config.logging.maxInMemoryEvents);
+            } else if (key == QStringLiteral("flush_interval_ms")) {
+                config.logging.flushIntervalMs = parseInt(value, config.logging.flushIntervalMs);
             }
         } else if (section == QStringLiteral("modbus")) {
             if (key == QStringLiteral("enabled")) {
@@ -271,6 +281,14 @@ bool AppConfig::validate(QString* errorMessage) const
         && (camera.camera3dPort == 0 || camera.camera3dPort == camera.camera2dPort)) {
         if (errorMessage) {
             *errorMessage = QStringLiteral("camera 2D/3D ports must be non-zero and different");
+        }
+        return false;
+    }
+    if (logging.logDir.trimmed().isEmpty()
+        || logging.maxInMemoryEvents <= 0
+        || logging.flushIntervalMs <= 0) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("logging config is invalid");
         }
         return false;
     }

@@ -5,7 +5,7 @@
 #include "core/EnqueueWorkflow.h"
 #include "core/LegacyCameraWorkflow.h"
 #include "core/QueueManager.h"
-#include "diagnostics/EventLog.h"
+#include "diagnostics/DiagnosticsService.h"
 #include "io/camera/CameraEndpoint.h"
 #include "io/plc/PlcEndpoint.h"
 #include "robot/FakeRobotController.h"
@@ -27,6 +27,9 @@ public:
     void stop();
     domain::QueueSnapshot queueSnapshot() const;
     QList<diagnostics::EventRecord> events() const;
+    QList<diagnostics::EventRecord> events(const diagnostics::EventFilter& filter) const;
+    QList<domain::DeviceHealthSnapshot> deviceHealthSnapshot() const;
+    bool flushDiagnostics(QString* errorMessage = nullptr);
 
 private:
     void wireEvents();
@@ -47,7 +50,7 @@ private:
     std::unique_ptr<core::DequeueCoordinator> dequeueCoordinator_;
     std::unique_ptr<core::EnqueueWorkflow> enqueueWorkflow_;
     std::unique_ptr<core::LegacyCameraWorkflow> legacyCameraWorkflow_;
-    diagnostics::EventLog eventLog_;
+    std::unique_ptr<diagnostics::DiagnosticsService> diagnostics_;
 };
 
 } // namespace spray::app

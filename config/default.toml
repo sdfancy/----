@@ -34,6 +34,11 @@ camera_count_extract_mode = "auto"
 
 [logging]
 raw_frames = true
+log_dir = "logs"
+persist_raw_frames = false
+persist_events = false
+max_in_memory_events = 1000
+flush_interval_ms = 1000
 
 [modbus]
 enabled = false

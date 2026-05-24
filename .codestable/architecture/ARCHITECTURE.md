@@ -14,6 +14,11 @@
 - Modbus sidecar：独立于 `PlcEndpoint` 的 Smart200 Modbus TCP 旁路客户端，默认禁用。
 - AddressTable：`config/modbus_nodes.toml` 中的 Modbus 节点表，保存 name、type、slaveId、address、count、writable、description。
 - PlcModbusClient：`io/plc` 下封装 Modbus 连接和读写 API 的客户端；后续 HMI/规则引擎通过它访问 Modbus，不直接访问 Qt SerialBus。
+- DiagnosticEvent：diagnostics 层统一事件记录，包含时间、等级、分类、设备、方向、hex payload、count、pointer、错误码和消息。
+- RawFrameLog：可配置持久化的 PLC/相机原始通讯 JSONL 日志，不改变 socket 收发。
+- DeviceHealth：按设备聚合 online、connectionCount、lastRxAt、lastTxAt、lastErrorAt 和 lastError 的快照。
+- DiagnosticsService：Application 内部聚合事件历史、设备健康和文件 sink 的服务，只读暴露给后续 HMI。
+- DeviceSimulator：本地联调模拟器，通过公开 TCP 端口复现 PLC 最小闭环和 dual camera 入队，不访问队列私有容器。
 - 队列项：由同一 count/pointer 创建的 arm1/arm2 双队列数据。
 - 出队缓存：PLC 指针变化后，为某个机械臂准备的待执行数据。
 - 相机入队流程：PLC 入队命令触发 legacy 单相机或 dual camera 流程，相机 payload 写入队列项。
@@ -37,6 +42,7 @@
 - 已落地 DUCO SDK 适配骨架：`app -> robot::IRobotController -> robot/duco role clients`
 - 已落地 DUCO 任务执行基础：`QueueManager raw payload -> MotionPlanner -> DucoMotionWorker -> DUCO motion client -> XN/XD`
 - 已落地 Modbus 旁路预留：`config -> ModbusAddressTable -> PlcModbusClient -> optional Qt SerialBus transport`
+- 已落地诊断日志基础：`Application signals -> DiagnosticsService -> EventLog + DeviceHealthRegistry + RawFrameFileSink`
 - 相机协议说明：`.codestable/architecture/protocol-camera.md`
 
 ### 3.1 已落地最小闭环
@@ -81,6 +87,14 @@
 - `io/plc`：禁用、未连接、非法地址、只读节点、协议异常和超时都返回 `ModbusError`；客户端发 `warning` 信号供 diagnostics/HMI 记录。
 - `io/plc`：Modbus 不挂入 `PlcEndpoint`，不参与 PLC `9999/9090` 入队、出队、反馈链路。
 
+### 3.6 已落地诊断日志基础
+
+- `diagnostics`：`DiagnosticEvent`/`EventFilter`/`EventLog` 提供内存事件历史，支持按 level、category、device、count、pointer 和时间窗口查询，并用 bounded ring buffer 暴露 dropped 计数。
+- `diagnostics`：`DiagnosticsService` 接收 PLC、相机、robot、workflow 的 rawFrame、warning、status 和业务事件，更新 `EventLog` 与 `DeviceHealthRegistry`。
+- `diagnostics`：`RawFrameFileSink` 按 `[logging]` 配置写 `raw-frames.jsonl` 与 `events.jsonl`，写入失败降级为 diagnostics warning，不阻断主控流程。
+- `diagnostics`：`DeviceSimulator` 通过公开 TCP 端口复现 PLC enqueue/dequeue 和 dual camera `11 -> READY -> 12 -> 3D -> Done`，用于本地联调和集成测试。
+- `app`：`Application` 暴露 `events(filter)`、`deviceHealthSnapshot()` 和 `flushDiagnostics()` 只读入口，后续 HMI 消费快照，不直接读取设备对象或队列私有容器。
+
 ## 4. 关键架构决定
 
 - 当前阶段不修改 PLC 与相机外部通讯流程。
@@ -102,5 +116,7 @@
 - DUCO `open()` 未成功前禁止上电、使能、任务控制和运动；任一 DUCO 调用返回 `-1` 进入 faulted 并发 warning，不伪造成任务完成。
 - 非默认 DUCO 任务没有有效 `MotionRecipe` 时必须拒绝执行；现场 recipe 文件、真实字段映射和喷枪接线由后续 `field-config-and-recipes` 完成。
 - `PlcEndpoint` 不 include 或持有 `PlcModbusClient`；Modbus 写入不得触发队列、相机流程或 DUCO motion。
-- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础和 Modbus 旁路预留；仍不包含 Qt Widgets、完整现场 recipe 管理和真实硬件验收。
+- diagnostics 只采集事件、健康状态和日志，不得调用 `QueueManager` 写接口或触发 DUCO motion。
+- socket 回调不得直接做阻塞文件写入；diagnostics 文件持久化必须走队列和 flush。
+- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础、Modbus 旁路预留和诊断日志基础；仍不包含完整现场 recipe 管理和真实硬件验收。
 - Windows/Qt MinGW 构建在中文源码路径下不能把构建目录放在项目内，Qt `moc` 会失败；使用 ASCII 构建目录。

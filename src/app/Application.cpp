@@ -1,5 +1,6 @@
 #include "app/Application.h"
 
+#include "diagnostics/DiagnosticCodes.h"
 #include "protocol/ByteCodec.h"
 #include "protocol/PlcProtocol.h"
 #include "robot/duco/DucoClientFactory.h"
@@ -8,6 +9,50 @@
 #include <QDebug>
 
 namespace spray::app {
+namespace {
+
+struct EventContext {
+    int count = -1;
+    int pointer = -1;
+};
+
+QString plcDevice(const QString& channel)
+{
+    return QStringLiteral("plc.%1").arg(channel);
+}
+
+QString cameraDevice(const QString& cameraKey)
+{
+    return QStringLiteral("camera.%1").arg(cameraKey);
+}
+
+EventContext plcRawContext(const QString& channel, const QString& direction, const QByteArray& bytes)
+{
+    if (direction != QStringLiteral("rx")) {
+        return {};
+    }
+    if (channel == QStringLiteral("enqueue")) {
+        const auto parsed = protocol::parseEnqueueFrame(bytes);
+        if (parsed.hasValue()) {
+            return {
+                static_cast<int>(parsed.value->count),
+                static_cast<int>(parsed.value->pointer),
+            };
+        }
+    }
+    if (channel == QStringLiteral("dequeue")) {
+        const auto parsed = protocol::parseDequeueFrame(bytes);
+        if (parsed.hasValue()) {
+            const int pointer = parsed.value->arm1Pointer != 0
+                ? parsed.value->arm1Pointer
+                : parsed.value->arm2Pointer;
+            return {-1, pointer};
+        }
+    }
+    return {};
+}
+
+} // namespace
 
 Application::Application(config::AppConfig config, bool simulateRobot, QObject* parent)
     : QObject(parent)
@@ -18,6 +63,7 @@ Application::Application(config::AppConfig config, bool simulateRobot, QObject* 
 
 bool Application::initialize(QString* errorMessage)
 {
+    diagnostics_ = std::make_unique<diagnostics::DiagnosticsService>(config_.logging);
     queueManager_ = std::make_unique<core::QueueManager>(
         config_.queue.prefetchOffset,
         config_.queue.maxItemsPerArm);
@@ -95,7 +141,7 @@ bool Application::start(QString* errorMessage)
     }
 
     if (ok) {
-        eventLog_.append(
+        diagnostics_->recordMessage(
             QStringLiteral("INFO"),
             QStringLiteral("app"),
             QStringLiteral("listening enqueue=%1 dequeue=%2 robot_mode=%3 camera_mode=%4")
@@ -134,7 +180,34 @@ domain::QueueSnapshot Application::queueSnapshot() const
 
 QList<diagnostics::EventRecord> Application::events() const
 {
-    return eventLog_.records();
+    if (!diagnostics_) {
+        return {};
+    }
+    return diagnostics_->events();
+}
+
+QList<diagnostics::EventRecord> Application::events(const diagnostics::EventFilter& filter) const
+{
+    if (!diagnostics_) {
+        return {};
+    }
+    return diagnostics_->events(filter);
+}
+
+QList<domain::DeviceHealthSnapshot> Application::deviceHealthSnapshot() const
+{
+    if (!diagnostics_) {
+        return {};
+    }
+    return diagnostics_->deviceHealthSnapshot();
+}
+
+bool Application::flushDiagnostics(QString* errorMessage)
+{
+    if (!diagnostics_) {
+        return true;
+    }
+    return diagnostics_->flush(errorMessage);
 }
 
 void Application::wireEvents()
@@ -151,15 +224,23 @@ void Application::wireDiagnosticEvents()
 {
     connect(plcEndpoint_.get(), &io::PlcEndpoint::rawFrame, this,
             [this](const QString& channel, const QString& direction, const QByteArray& bytes) {
-                eventLog_.append(
-                    QStringLiteral("INFO"),
+                const auto context = plcRawContext(channel, direction, bytes);
+                const int connectionCount = channel == QStringLiteral("enqueue")
+                    ? plcEndpoint_->enqueueConnectionCount()
+                    : plcEndpoint_->dequeueConnectionCount();
+                diagnostics_->recordRawFrame(
                     QStringLiteral("plc.raw"),
-                    QStringLiteral("%1 %2 %3").arg(channel, direction, protocol::toHex(bytes)));
+                    plcDevice(channel),
+                    direction,
+                    bytes,
+                    context.count,
+                    context.pointer,
+                    connectionCount);
             });
 
     connect(plcEndpoint_.get(), &io::PlcEndpoint::warning, this,
             [this](const QString& message) {
-                eventLog_.append(QStringLiteral("WARN"), QStringLiteral("plc"), message);
+                diagnostics_->recordWarning(QStringLiteral("plc"), QStringLiteral("plc"), message);
                 qWarning().noquote() << message;
             });
 }
@@ -178,17 +259,27 @@ void Application::wirePlcDequeueEvents()
             [this](const QByteArray& bytes) {
                 const auto parsed = protocol::parseDequeueFrame(bytes);
                 if (!parsed.hasValue()) {
-                    eventLog_.append(QStringLiteral("WARN"), QStringLiteral("plc.dequeue"), parsed.error->message);
+                    diagnostics_->recordWarning(
+                        QStringLiteral("plc.dequeue"),
+                        QStringLiteral("plc.dequeue"),
+                        parsed.error->message,
+                        diagnostics::DiagnosticCode::plcProtocolInvalidFrame());
                     qWarning().noquote() << parsed.error->message;
                     return;
                 }
                 dequeueCoordinator_->onDequeueFrame(*parsed.value);
-                eventLog_.append(
+                diagnostics_->recordMessage(
                     QStringLiteral("INFO"),
                     QStringLiteral("queue.dequeue"),
                     QStringLiteral("arm1Pointer=%1 arm2Pointer=%2")
                         .arg(parsed.value->arm1Pointer)
-                        .arg(parsed.value->arm2Pointer));
+                        .arg(parsed.value->arm2Pointer),
+                    QStringLiteral("queue"),
+                    QString(),
+                    -1,
+                    parsed.value->arm1Pointer != 0
+                        ? parsed.value->arm1Pointer
+                        : parsed.value->arm2Pointer);
             });
 }
 
@@ -196,38 +287,48 @@ void Application::wireDequeueCoordinatorEvents()
 {
     connect(dequeueCoordinator_.get(), &core::DequeueCoordinator::taskDispatched, this,
             [this](const core::RobotTask& task) {
-                eventLog_.append(
+                diagnostics_->recordMessage(
                     QStringLiteral("INFO"),
                     QStringLiteral("robot.dispatch"),
                     QStringLiteral("arm=%1 count=%2 pointer=%3 default=%4")
                         .arg(task.armId)
                         .arg(task.count)
                         .arg(task.pointer)
-                        .arg(task.defaultNoop));
+                        .arg(task.defaultNoop),
+                    QStringLiteral("robot"),
+                    QString(),
+                    task.count,
+                    task.pointer);
             });
 
     connect(dequeueCoordinator_.get(), &core::DequeueCoordinator::feedbackSent, this,
             [this](const QByteArray& feedback, bool ok) {
-                eventLog_.append(
+                diagnostics_->recordMessage(
                     ok ? QStringLiteral("INFO") : QStringLiteral("WARN"),
                     QStringLiteral("plc.feedback"),
-                    QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(feedback)).arg(ok));
+                    QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(feedback)).arg(ok),
+                    QStringLiteral("plc.dequeue"));
             });
 
     connect(robot_.get(), &robot::IRobotController::warning, this,
             [this](const QString& message) {
-                eventLog_.append(QStringLiteral("WARN"), QStringLiteral("robot"), message);
+                diagnostics_->recordWarning(
+                    QStringLiteral("robot"),
+                    QStringLiteral("robot"),
+                    message,
+                    diagnostics::DiagnosticCode::robotFault());
             });
 
     connect(robot_.get(), &robot::IRobotController::statusChanged, this,
             [this](const robot::RobotStatus& status) {
-                eventLog_.append(
+                diagnostics_->recordMessage(
                     QStringLiteral("INFO"),
                     QStringLiteral("robot.status"),
                     QStringLiteral("state=%1 moving=%2 message=%3")
                         .arg(static_cast<int>(status.connectionState))
                         .arg(status.moving)
-                        .arg(status.message));
+                        .arg(status.message),
+                    QStringLiteral("robot"));
             });
 }
 
@@ -235,14 +336,22 @@ void Application::wireCameraEvents()
 {
     connect(cameraEndpoint_.get(), &io::CameraEndpoint::rawFrame, this,
             [this](const QString& cameraKey, const QString& direction, const QByteArray& payload) {
-                eventLog_.append(
-                    QStringLiteral("INFO"),
+                diagnostics_->recordRawFrame(
                     QStringLiteral("camera.raw"),
-                    QStringLiteral("%1 %2 %3").arg(cameraKey, direction, protocol::toHex(payload)));
+                    cameraDevice(cameraKey),
+                    direction,
+                    payload,
+                    -1,
+                    -1,
+                    cameraEndpoint_->connectionCount(cameraKey));
             });
     connect(cameraEndpoint_.get(), &io::CameraEndpoint::warning, this,
             [this](const QString& message) {
-                eventLog_.append(QStringLiteral("WARN"), QStringLiteral("camera"), message);
+                diagnostics_->recordWarning(
+                    QStringLiteral("camera"),
+                    QStringLiteral("camera"),
+                    message,
+                    diagnostics::DiagnosticCode::cameraWarning());
                 qWarning().noquote() << message;
             });
     connect(cameraEndpoint_.get(), &io::CameraEndpoint::payloadReceived, this,
@@ -262,42 +371,54 @@ void Application::wireWorkflowEvents()
     if (enqueueWorkflow_) {
         connect(enqueueWorkflow_.get(), &core::EnqueueWorkflow::cameraCommandSent, this,
                 [this](const QString& cameraKey, const QByteArray& payload, bool ok) {
-                    eventLog_.append(
+                    diagnostics_->recordMessage(
                         ok ? QStringLiteral("INFO") : QStringLiteral("WARN"),
                         QStringLiteral("camera.command"),
-                        QStringLiteral("%1 %2 sent=%3").arg(cameraKey, QString::fromLatin1(payload)).arg(ok));
+                        QStringLiteral("%1 %2 sent=%3").arg(cameraKey, QString::fromLatin1(payload)).arg(ok),
+                        cameraDevice(cameraKey));
                 });
         connect(enqueueWorkflow_.get(), &core::EnqueueWorkflow::enqueueFeedbackSent, this,
                 [this](const QByteArray& payload, bool ok) {
-                    eventLog_.append(
+                    diagnostics_->recordMessage(
                         ok ? QStringLiteral("INFO") : QStringLiteral("WARN"),
                         QStringLiteral("plc.enqueue.feedback"),
-                        QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(payload)).arg(ok));
+                        QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(payload)).arg(ok),
+                        QStringLiteral("plc.enqueue"));
                 });
         connect(enqueueWorkflow_.get(), &core::EnqueueWorkflow::warning, this,
                 [this](const QString& message) {
-                    eventLog_.append(QStringLiteral("WARN"), QStringLiteral("enqueue.workflow"), message);
+                    diagnostics_->recordWarning(
+                        QStringLiteral("enqueue.workflow"),
+                        QStringLiteral("camera.workflow"),
+                        message,
+                        diagnostics::DiagnosticCode::cameraWarning());
                 });
     }
 
     if (legacyCameraWorkflow_) {
         connect(legacyCameraWorkflow_.get(), &core::LegacyCameraWorkflow::cameraTriggerSent, this,
                 [this](const QByteArray& payload, bool ok) {
-                    eventLog_.append(
+                    diagnostics_->recordMessage(
                         ok ? QStringLiteral("INFO") : QStringLiteral("WARN"),
                         QStringLiteral("legacy.camera.trigger"),
-                        QStringLiteral("%1 sent=%2").arg(protocol::toHex(payload)).arg(ok));
+                        QStringLiteral("%1 sent=%2").arg(protocol::toHex(payload)).arg(ok),
+                        QStringLiteral("camera.legacy"));
                 });
         connect(legacyCameraWorkflow_.get(), &core::LegacyCameraWorkflow::stageFeedbackSent, this,
                 [this](const QByteArray& payload, bool ok) {
-                    eventLog_.append(
+                    diagnostics_->recordMessage(
                         ok ? QStringLiteral("INFO") : QStringLiteral("WARN"),
                         QStringLiteral("plc.enqueue.feedback"),
-                        QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(payload)).arg(ok));
+                        QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(payload)).arg(ok),
+                        QStringLiteral("plc.enqueue"));
                 });
         connect(legacyCameraWorkflow_.get(), &core::LegacyCameraWorkflow::warning, this,
                 [this](const QString& message) {
-                    eventLog_.append(QStringLiteral("WARN"), QStringLiteral("legacy.camera.workflow"), message);
+                    diagnostics_->recordWarning(
+                        QStringLiteral("legacy.camera.workflow"),
+                        QStringLiteral("camera.legacy"),
+                        message,
+                        diagnostics::DiagnosticCode::cameraWarning());
                 });
     }
 }
@@ -306,18 +427,26 @@ void Application::handlePlcEnqueueFrame(const QByteArray& bytes)
 {
     const auto parsed = protocol::parseEnqueueFrame(bytes);
     if (!parsed.hasValue()) {
-        eventLog_.append(QStringLiteral("WARN"), QStringLiteral("plc.enqueue"), parsed.error->message);
+        diagnostics_->recordWarning(
+            QStringLiteral("plc.enqueue"),
+            QStringLiteral("plc.enqueue"),
+            parsed.error->message,
+            diagnostics::DiagnosticCode::plcProtocolInvalidFrame());
         qWarning().noquote() << parsed.error->message;
         return;
     }
 
-    eventLog_.append(
+    diagnostics_->recordMessage(
         QStringLiteral("INFO"),
         QStringLiteral("queue.enqueue"),
         QStringLiteral("command=%1 count=%2 pointer=%3")
             .arg(parsed.value->command)
             .arg(parsed.value->count)
-            .arg(parsed.value->pointer));
+            .arg(parsed.value->pointer),
+        QStringLiteral("queue"),
+        QString(),
+        parsed.value->count,
+        parsed.value->pointer);
 
     if (enqueueWorkflow_) {
         enqueueWorkflow_->handlePlcFrame(*parsed.value);

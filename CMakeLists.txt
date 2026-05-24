@@ -28,7 +28,11 @@ set(SPRAY_COMMON_SOURCES
     src/core/EnqueueWorkflow.cpp
     src/core/LegacyCameraWorkflow.cpp
     src/core/QueueManager.cpp
+    src/diagnostics/DeviceHealthRegistry.cpp
+    src/diagnostics/DeviceSimulator.cpp
+    src/diagnostics/DiagnosticsService.cpp
     src/diagnostics/EventLog.cpp
+    src/diagnostics/RawFrameFileSink.cpp
     src/io/camera/CameraEndpoint.cpp
     src/io/plc/ModbusAddressTable.cpp
     src/io/plc/PlcModbusClient.cpp
@@ -76,6 +80,9 @@ qt_add_executable(spray_tests
     tests/test_application_loop.cpp
     tests/test_camera_endpoint.cpp
     tests/test_camera_protocol.cpp
+    tests/test_diagnostics_event_log.cpp
+    tests/test_diagnostics_service.cpp
+    tests/test_device_simulator.cpp
     tests/test_duco_robot_controller.cpp
     tests/test_enqueue_workflow.cpp
     tests/test_fake_robot_loop.cpp

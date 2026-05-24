@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDateTime>
 #include <QList>
 #include <QString>
 
@@ -24,6 +25,16 @@ struct CacheSnapshot {
 struct QueueSnapshot {
     QList<QueueItemSnapshot> items;
     QList<CacheSnapshot> caches;
+};
+
+struct DeviceHealthSnapshot {
+    QString device;
+    bool online = false;
+    int connectionCount = 0;
+    QDateTime lastRxAt;
+    QDateTime lastTxAt;
+    QDateTime lastErrorAt;
+    QString lastError;
 };
 
 } // namespace spray::domain

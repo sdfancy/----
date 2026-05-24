@@ -98,6 +98,47 @@ address_table = "config/site_modbus.toml"
         QVERIFY(!config.validate(&error));
         QCOMPARE(error, QStringLiteral("modbus config is invalid"));
     }
+
+    void parsesLoggingConfig()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+
+        const QString path = dir.filePath(QStringLiteral("config.toml"));
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Text));
+        file.write(R"toml(
+[logging]
+raw_frames = false
+log_dir = "site_logs"
+persist_raw_frames = true
+persist_events = true
+max_in_memory_events = 250
+flush_interval_ms = 200
+)toml");
+        file.close();
+
+        QString error;
+        const auto config = AppConfig::load(path, &error);
+        QVERIFY2(error.isEmpty(), qPrintable(error));
+        QVERIFY(!config.logging.rawFrames);
+        QCOMPARE(config.logging.logDir, QStringLiteral("site_logs"));
+        QVERIFY(config.logging.persistRawFrames);
+        QVERIFY(config.logging.persistEvents);
+        QCOMPARE(config.logging.maxInMemoryEvents, 250);
+        QCOMPARE(config.logging.flushIntervalMs, 200);
+        QVERIFY(config.validate(&error));
+    }
+
+    void rejectsInvalidLoggingConfig()
+    {
+        auto config = AppConfig::defaults();
+        config.logging.maxInMemoryEvents = 0;
+
+        QString error;
+        QVERIFY(!config.validate(&error));
+        QCOMPARE(error, QStringLiteral("logging config is invalid"));
+    }
 };
 
 QObject* createAppConfigTest()
