@@ -213,7 +213,7 @@ RobotSnapshot robotSnapshot(int armId)
 6. **modbus-plc-reservation**（done，feature `2026-05-24-modbus-plc-reservation`）— Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留。
 7. **diagnostics-and-logs**（done，feature `2026-05-24-diagnostics-and-logs`）— 原始通讯日志、事件历史、健康检查、错误码和测试模拟器。
 8. **field-config-and-recipes**（done，feature `2026-05-24-field-config-and-recipes`）— 现场配置、机械臂 recipe、点位字段映射、喷枪 IO 和速度参数。
-9. **hardware-acceptance** — 真实 PLC、相机、新松机械臂联调验收脚本和现场 checklist。
+9. **hardware-acceptance**（done，feature `2026-05-24-hardware-acceptance`）— 真实 PLC、相机、新松机械臂联调验收 runbook、现场 checklist 和证据收集 helper。
 
 **最小闭环**：第 1 条 `cpp-minimal-loop` 做完后，可以不用真实机械臂，使用 fake robot 验证 PLC 出队指针变化 -> 准备缓存 -> fake 执行 -> PLC 收到 `1N/1D/2N/2D`。
 
@@ -240,3 +240,4 @@ RobotSnapshot robotSnapshot(int armId)
 - 2026-05-24：完成 `modbus-plc-reservation`，Smart200 Modbus TCP 旁路客户端、地址表和默认禁用边界进入 done。
 - 2026-05-24：完成 `diagnostics-and-logs`，事件历史、raw/event JSONL、设备健康快照和本地模拟器进入 done。
 - 2026-05-24：完成 `field-config-and-recipes`，现场 recipe 文件化、字段映射、喷枪 IO 和 DUCO 注入进入 done。
+- 2026-05-24：完成 `hardware-acceptance`，P0-P6 runbook、现场 checklist 和 evidence helper 进入 done；真实设备结果由现场记录。

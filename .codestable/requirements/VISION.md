@@ -16,6 +16,7 @@ last_reviewed: 2026-05-24
 - `modbus-plc-reservation`：预留默认禁用的 Smart200 Modbus TCP 客户端、地址表和读写 API。
 - `diagnostics-and-logs`：让现场联调可以按时间、设备、count/pointer 和错误码追踪通讯与异常。
 - `field-config-and-recipes`：把现场点位字段、喷涂参数和喷枪 IO 变成可检查的配置。
+- `hardware-acceptance`：把真实硬件联调变成有步骤、有证据、可回退的验收流程。
 
 ## Draft
 

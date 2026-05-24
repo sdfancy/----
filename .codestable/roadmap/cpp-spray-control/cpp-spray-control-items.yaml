@@ -69,7 +69,7 @@ items:
   - slug: hardware-acceptance
     description: 真实 PLC、相机、新松机械臂联调验收脚本和现场 checklist
     depends_on: [duco-task-executor, qt-hmi-shell, diagnostics-and-logs, field-config-and-recipes]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-hardware-acceptance
     minimal_loop: false
-    notes: null
+    notes: 交付 runbook/checklist/evidence helper；真实现场 P0-P6 结果由现场记录

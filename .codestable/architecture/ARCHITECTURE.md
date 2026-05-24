@@ -36,6 +36,11 @@
 - SprayIoConfig：recipe 中 `spray_io` 和 `spray_io_channel` 定义的喷枪 IO 类型与通道。
 - PlannedRobotTask：`core::RobotTask` 加 `MotionSegment` 序列后的 robot 内部执行形态。
 - DUCO motion worker：按 arm 串行执行 motion client 阻塞调用的 worker，controller 只做规划和调度粘合。
+- FieldRunbook：现场 P0-P6 分阶段验收操作手册，面向人工执行，不自动驱动危险动作。
+- FieldChecklist：现场 pass/fail/evidence/sign-off 记录表，用于记录真实 PLC、相机和 DUCO 联调结果。
+- EvidenceBundle：一次现场验收的证据目录，包含 commit、配置、recipe、日志、测试输出、checklist 和现场备注。
+- DryRunGate：接入真实硬件前必须通过的 fake robot / simulator 离线检查。
+- SafetyHoldPoint：机械臂、喷枪或生产观察前必须人工确认的安全停止点。
 
 ## 3. 子系统 / 模块索引
 
@@ -48,6 +53,7 @@
 - 已落地 Modbus 旁路预留：`config -> ModbusAddressTable -> PlcModbusClient -> optional Qt SerialBus transport`
 - 已落地诊断日志基础：`Application signals -> DiagnosticsService -> EventLog + DeviceHealthRegistry + RawFrameFileSink`
 - 已落地现场 recipe 配置：`config -> MotionRecipeTable -> DucoRobotController::setMotionRecipe -> MotionPlanner`
+- 已落地硬件验收包：`docs/runbook + docs/checklist + tools/field_acceptance/collect_evidence.ps1`
 - 相机协议说明：`.codestable/architecture/protocol-camera.md`
 
 ### 3.1 已落地最小闭环
@@ -109,6 +115,13 @@
 - `robot/duco`：非默认任务仍由 `MotionPlanner` 消费 `MotionRecipe` 规划，缺失或 disabled recipe 只 warning 和 `taskFinished(false)`，不发送正常 `XD`。
 - `robot/fake`：fake robot 和默认空任务不依赖 recipe 文件。
 
+### 3.8 已落地硬件验收包
+
+- `docs/hardware_acceptance_runbook.md`：按 P0 准备、P1 dry-run、P2 PLC、P3 相机、P4 DUCO prepare、P5 低速运动、P6 生产观察组织现场验收。
+- `docs/hardware_acceptance_checklist.md`：记录每阶段 pass/fail、时间、操作者、证据、SafetyHoldPoint 和签字。
+- `tools/field_acceptance/collect_evidence.ps1`：只复制配置、recipe、日志、test-output、checklist 并生成 summary，不连接 PLC、相机、DUCO 或 Modbus。
+- 真实现场通过/失败结果不写入默认仓库状态，由现场 EvidenceBundle、checklist 或后续 issue 记录。
+
 ## 4. 关键架构决定
 
 - 当前阶段不修改 PLC 与相机外部通讯流程。
@@ -120,6 +133,7 @@
 - `taskFinished(ok=false)` 代表任务失败或安全拒绝，不得发送正常 `XD`；当前不新增 PLC 错误反馈码。
 - HMI 建议使用 Qt Widgets；通讯层使用 Qt Network，预留 Modbus 使用 Qt SerialBus。
 - Modbus 是默认禁用的旁路能力；Smart200 地址只能来自地址表配置，不能写入业务代码。
+- 硬件验收 helper 只能做资料收集和离线证据归档，不得自动执行真实 motion、IO 或 Modbus 写入。
 
 ## 5. 已知约束 / 硬边界
 
@@ -133,5 +147,6 @@
 - `PlcEndpoint` 不 include 或持有 `PlcModbusClient`；Modbus 写入不得触发队列、相机流程或 DUCO motion。
 - diagnostics 只采集事件、健康状态和日志，不得调用 `QueueManager` 写接口或触发 DUCO motion。
 - socket 回调不得直接做阻塞文件写入；diagnostics 文件持久化必须走队列和 flush。
-- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础、Modbus 旁路预留、诊断日志基础和现场 recipe 文件化配置；仍不包含真实硬件验收。
+- 现场真实 IP、坐标、相机字段、喷枪 IO、Smart200 地址和凭证不得提交到仓库。
+- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础、Modbus 旁路预留、诊断日志基础、现场 recipe 文件化配置和硬件验收包；仍不包含现场真实通过记录。
 - Windows/Qt MinGW 构建在中文源码路径下不能把构建目录放在项目内，Qt `moc` 会失败；使用 ASCII 构建目录。

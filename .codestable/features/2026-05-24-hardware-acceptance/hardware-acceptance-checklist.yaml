@@ -1,0 +1,51 @@
+feature: 2026-05-24-hardware-acceptance
+created: 2026-05-24
+
+steps:
+  - action: "requirement 和 design 初稿：锁定能力边界、阶段 gate、明确不做和安全 hold point"
+    exit_signal: "用户确认 design，可进入 approved。"
+    status: done
+  - action: "验收文档：编写 FieldRunbook 和 FieldChecklist"
+    exit_signal: "文档覆盖 P0-P6、每步有前置条件/操作/期望/失败处理/证据。"
+    status: done
+  - action: "低风险 helper：实现 evidence 收集脚本或等价命令说明"
+    exit_signal: "脚本只复制配置/日志/test-output，不发真实硬件命令。"
+    status: done
+  - action: "范围守护：验证未改 PLC/相机/DUCO motion API，未写真实现场参数，未新增 HMI 代码"
+    exit_signal: "grep 和 YAML/frontmatter 校验通过。"
+    status: done
+
+checks:
+  - item: "FieldRunbook 覆盖 P0 准备、P1 dry-run、P2 PLC、P3 相机、P4 DUCO prepare、P5 低速运动、P6 生产观察"
+    source: 验收场景
+    status: passed
+  - item: "FieldChecklist 每一步包含 pass/fail、时间、操作者、证据文件和安全 hold point"
+    source: 名词契约
+    status: passed
+  - item: "EvidenceBundle 约定包含 git commit、config 快照、motion recipe、logs、test-output、现场备注"
+    source: 名词契约
+    status: passed
+  - item: "helper 只复制配置、日志、test-output 和 checklist，不连接 PLC/相机/DUCO，不发 motion/IO 命令"
+    source: 流程级约束
+    status: passed
+  - item: "P5 前明确要求确认 recipe 是现场替换值，不是仓库示例值"
+    source: 流程级约束
+    status: passed
+  - item: "失败证据要求包含 events.jsonl、raw-frames.jsonl、配置快照和现场备注"
+    source: 流程级约束
+    status: passed
+  - item: "不修改 PLC 9999/9090 字节格式、反馈码或端口默认值"
+    source: 范围守护
+    status: passed
+  - item: "不修改相机 legacy/dual camera 外部协议"
+    source: 范围守护
+    status: passed
+  - item: "不新增自动执行真实 motion/IO 的脚本"
+    source: 范围守护
+    status: passed
+  - item: "不提交真实现场 IP、坐标、喷枪 IO、Smart200 地址或凭证"
+    source: 范围守护
+    status: passed
+  - item: "不新增 Qt Widgets 页面或 HMI 代码"
+    source: 范围守护
+    status: passed
