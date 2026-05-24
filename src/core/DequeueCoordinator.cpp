@@ -6,15 +6,15 @@ namespace spray::core {
 
 DequeueCoordinator::DequeueCoordinator(QueueManager* queueManager,
                                        io::PlcEndpoint* plcEndpoint,
-                                       robot::FakeRobotController* robot,
+                                       robot::IRobotController* robot,
                                        QObject* parent)
     : QObject(parent)
     , queueManager_(queueManager)
     , plcEndpoint_(plcEndpoint)
     , robot_(robot)
 {
-    connect(robot_, &robot::FakeRobotController::taskAccepted, this, &DequeueCoordinator::onTaskAccepted);
-    connect(robot_, &robot::FakeRobotController::taskFinished, this, &DequeueCoordinator::onTaskFinished);
+    connect(robot_, &robot::IRobotController::taskAccepted, this, &DequeueCoordinator::onTaskAccepted);
+    connect(robot_, &robot::IRobotController::taskFinished, this, &DequeueCoordinator::onTaskFinished);
 }
 
 void DequeueCoordinator::onDequeueFrame(protocol::PlcDequeueFrame frame)

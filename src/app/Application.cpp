@@ -2,6 +2,8 @@
 
 #include "protocol/ByteCodec.h"
 #include "protocol/PlcProtocol.h"
+#include "robot/duco/DucoClientFactory.h"
+#include "robot/duco/DucoRobotController.h"
 
 #include <QDebug>
 
@@ -16,25 +18,26 @@ Application::Application(config::AppConfig config, bool simulateRobot, QObject* 
 
 bool Application::initialize(QString* errorMessage)
 {
-    if (!simulateRobot_ && !config_.fakeRobot.enabled) {
-        if (errorMessage) {
-            *errorMessage = QStringLiteral("cpp-minimal-loop requires fake robot mode");
-        }
-        return false;
-    }
-
     queueManager_ = std::make_unique<core::QueueManager>(
         config_.queue.prefetchOffset,
         config_.queue.maxItemsPerArm);
     plcEndpoint_ = std::make_unique<io::PlcEndpoint>(config_.plc);
     cameraEndpoint_ = std::make_unique<io::CameraEndpoint>(config_.camera);
-    fakeRobot_ = std::make_unique<robot::FakeRobotController>(
-        config_.fakeRobot.acceptDelayMs,
-        config_.fakeRobot.finishDelayMs);
+    const auto robotMode = simulateRobot_ ? config::RobotMode::Fake : config_.robot.mode;
+    if (robotMode == config::RobotMode::Fake) {
+        robot_ = std::make_unique<robot::FakeRobotController>(
+            config_.fakeRobot.acceptDelayMs,
+            config_.fakeRobot.finishDelayMs);
+    } else {
+        auto factory = robot::duco::createDucoClientFactory(config_.robot);
+        robot_ = std::make_unique<robot::duco::DucoRobotController>(
+            config_.robot,
+            std::move(factory));
+    }
     dequeueCoordinator_ = std::make_unique<core::DequeueCoordinator>(
         queueManager_.get(),
         plcEndpoint_.get(),
-        fakeRobot_.get());
+        robot_.get());
     if (config_.camera.flowMode == config::CameraFlowMode::DualCamera11_12) {
         enqueueWorkflow_ = std::make_unique<core::EnqueueWorkflow>(queueManager_.get());
         enqueueWorkflow_->setCameraSender([this](const QString& cameraKey, const QByteArray& payload) {
@@ -69,12 +72,24 @@ bool Application::start(QString* errorMessage)
         return false;
     }
 
+    const auto robotStart = config_.robot.prepareOnStart
+        ? robot_->prepare()
+        : robot_->connectRobot();
+    if (!robotStart.ok) {
+        if (errorMessage) {
+            *errorMessage = robotStart.message;
+        }
+        return false;
+    }
+
     if (!cameraEndpoint_->start(errorMessage)) {
+        robot_->disconnectRobot();
         return false;
     }
 
     const bool ok = plcEndpoint_->start(errorMessage);
     if (!ok) {
+        robot_->disconnectRobot();
         cameraEndpoint_->stop();
         return false;
     }
@@ -83,9 +98,12 @@ bool Application::start(QString* errorMessage)
         eventLog_.append(
             QStringLiteral("INFO"),
             QStringLiteral("app"),
-            QStringLiteral("listening enqueue=%1 dequeue=%2 fake_robot=true camera_mode=%3")
+            QStringLiteral("listening enqueue=%1 dequeue=%2 robot_mode=%3 camera_mode=%4")
                 .arg(config_.plc.enqueuePort)
                 .arg(config_.plc.dequeuePort)
+                .arg(simulateRobot_ || config_.robot.mode == config::RobotMode::Fake
+                         ? QStringLiteral("fake")
+                         : QStringLiteral("duco"))
                 .arg(config_.camera.flowMode == config::CameraFlowMode::DualCamera11_12
                          ? QStringLiteral("dual_camera_11_12")
                          : QStringLiteral("legacy_single_camera")));
@@ -95,6 +113,9 @@ bool Application::start(QString* errorMessage)
 
 void Application::stop()
 {
+    if (robot_) {
+        robot_->disconnectRobot();
+    }
     if (cameraEndpoint_) {
         cameraEndpoint_->stop();
     }
@@ -191,6 +212,22 @@ void Application::wireDequeueCoordinatorEvents()
                     ok ? QStringLiteral("INFO") : QStringLiteral("WARN"),
                     QStringLiteral("plc.feedback"),
                     QStringLiteral("%1 sent=%2").arg(QString::fromLatin1(feedback)).arg(ok));
+            });
+
+    connect(robot_.get(), &robot::IRobotController::warning, this,
+            [this](const QString& message) {
+                eventLog_.append(QStringLiteral("WARN"), QStringLiteral("robot"), message);
+            });
+
+    connect(robot_.get(), &robot::IRobotController::statusChanged, this,
+            [this](const robot::RobotStatus& status) {
+                eventLog_.append(
+                    QStringLiteral("INFO"),
+                    QStringLiteral("robot.status"),
+                    QStringLiteral("state=%1 moving=%2 message=%3")
+                        .arg(static_cast<int>(status.connectionState))
+                        .arg(status.moving)
+                        .arg(status.message));
             });
 }
 

@@ -1,25 +1,27 @@
 #pragma once
 
-#include "core/QueueManager.h"
+#include "robot/IRobotController.h"
 
-#include <QObject>
 #include <QQueue>
 #include <QSet>
 
 namespace spray::robot {
 
-class FakeRobotController final : public QObject {
+class FakeRobotController final : public IRobotController {
     Q_OBJECT
 
 public:
     explicit FakeRobotController(int acceptDelayMs = 20, int finishDelayMs = 80, QObject* parent = nullptr);
 
-    void enqueueTask(const core::RobotTask& task);
+    RobotCommandResult connectRobot() override;
+    void disconnectRobot() override;
+    RobotCommandResult prepare() override;
+    void enqueueTask(const core::RobotTask& task) override;
+    RobotCommandResult stop() override;
+    RobotCommandResult pause() override;
+    RobotCommandResult resume() override;
+    RobotStatus readStatus() override;
     int pendingCount(int armId) const;
-
-signals:
-    void taskAccepted(spray::core::RobotTask task);
-    void taskFinished(spray::core::RobotTask task, bool ok, QString message);
 
 private:
     void tryStartNext(int armId);

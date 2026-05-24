@@ -17,6 +17,8 @@
 - dual camera：软件监听 2D/3D 相机端口，按 `11 -> READY -> 12 -> 3D -> Done` 编排入队。
 - legacy 单相机：软件作为 TCP client 连接单相机，按 PLC `1/11/12` 触发并按 sequential/counted 匹配回包。
 - DUCO 远程 API：新松机械臂二次开发接口，默认远程端口 `7003`。
+- 机械臂控制契约：`robot::IRobotController` 是 `core::DequeueCoordinator` 面向机械臂的唯一接口，fake robot 和 DUCO controller 都走该契约。
+- DUCO client role：DUCO 适配层按 motion/control/heartbeat/status 拆分 SDK client 对象，避免多线程阻塞调用共享同一 `DucoCobot`。
 
 ## 3. 子系统 / 模块索引
 
@@ -24,6 +26,7 @@
 - C++ 文件与函数方案：`.codestable/roadmap/cpp-spray-control/cpp-spray-control-file-function-plan.md`
 - 已落地最小闭环：`app -> io/plc -> protocol -> core -> robot/fake -> io/plc feedback`
 - 已落地相机入队 parity：`app -> io/plc + io/camera -> core workflow -> QueueManager -> PLC enqueue feedback`
+- 已落地 DUCO SDK 适配骨架：`app -> robot::IRobotController -> robot/duco role clients`
 - 相机协议说明：`.codestable/architecture/protocol-camera.md`
 
 ### 3.1 已落地最小闭环
@@ -42,11 +45,20 @@
 - `app`：`Application` 根据 `camera.flow_mode` 组装 dual 或 legacy workflow，并把 PLC 入队帧、相机 payload、入队阶段反馈接起来。
 - `io/plc`：`PlcEndpoint` 保持 `9999/9090` 双 TCP 通道，并新增在 `9999` 当前连接发送入队阶段反馈的能力。
 
+### 3.3 已落地 DUCO SDK 适配骨架
+
+- `robot`：`IRobotController` 定义连接、prepare、出队任务、stop/pause/resume/readStatus，以及 accepted/finished/status/warning 信号。
+- `robot/fake`：`FakeRobotController` 实现 `IRobotController`，继续用于无真实 SDK 环境和 PLC 出队闭环测试。
+- `robot/duco`：`DucoRobotController` 管理 DUCO role clients；prepare 顺序为 open role clients -> heartbeat -> power_on(true) -> enable(true) -> readStatus。
+- `robot/duco`：当前默认构建不链接现场 SDK，`SPRAY_ENABLE_DUCO` 和 SDK include/lib 作为可选构建入口；缺 SDK 时 fake 构建和测试不受影响。
+- `app`：`Application` 按 `[robot].mode` 选择 fake 或 DUCO controller，并在 start/stop 中接入 robot lifecycle。
+
 ## 4. 关键架构决定
 
 - 当前阶段不修改 PLC 与相机外部通讯流程。
 - 相机入队状态机不放入 `QueueManager`；`QueueManager` 只负责成对队列、缓存和 `storeCameraData()`。
 - 机械臂侧不再依赖示教器程序的 `data/1` TCP 协议，改为软件通过 DUCO 远程 API 主动执行喷涂任务。
+- `core::DequeueCoordinator` 只依赖 `robot::IRobotController`，不得直接依赖 fake 或 DUCO SDK 类型。
 - HMI 建议使用 Qt Widgets；通讯层使用 Qt Network，预留 Modbus 使用 Qt SerialBus。
 
 ## 5. 已知约束 / 硬边界
@@ -56,5 +68,6 @@
 - PLC 与相机 socket 回调不得阻塞等待对方返回；跨设备编排放在 core workflow。
 - dual camera `Done` 对同一 count 只发送一次，且必须 arm1/arm2 的 3D payload 都写入队列。
 - DUCO API 多线程调用必须隔离对象：阻塞运动、任务控制、心跳不得共享同一个 `DucoCobot` 对象。
-- 当前已接入 PLC 和相机入队流程；仍不包含 DUCO SDK、Qt Widgets 和 Modbus，这些能力由后续 roadmap item 单独接入。
+- DUCO `open()` 未成功前禁止上电、使能和任务控制；任一 DUCO 调用返回 `-1` 进入 faulted 并发 warning，不伪造成任务完成。
+- 当前已接入 PLC、相机入队流程和 DUCO 适配骨架；仍不包含真实喷涂运动路径、Qt Widgets 和 Modbus，这些能力由后续 roadmap item 单独接入。
 - Windows/Qt MinGW 构建在中文源码路径下不能把构建目录放在项目内，Qt `moc` 会失败；使用 ASCII 构建目录。

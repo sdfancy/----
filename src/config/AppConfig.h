@@ -21,6 +21,21 @@ struct FakeRobotConfig {
     int finishDelayMs = 80;
 };
 
+enum class RobotMode {
+    Fake,
+    Duco,
+};
+
+struct RobotConfig {
+    RobotMode mode = RobotMode::Fake;
+    QString ip = QStringLiteral("127.0.0.1");
+    quint16 port = 7003;
+    int heartbeatMs = 1000;
+    bool prepareOnStart = false;
+    bool autoPowerOn = true;
+    bool autoEnable = true;
+};
+
 enum class CameraFlowMode {
     LegacySingleCamera,
     DualCamera11_12,
@@ -58,6 +73,7 @@ struct AppConfig {
     PlcConfig plc;
     QueueConfig queue;
     FakeRobotConfig fakeRobot;
+    RobotConfig robot;
     CameraConfig camera;
     LoggingConfig logging;
 

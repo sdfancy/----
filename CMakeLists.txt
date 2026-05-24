@@ -8,6 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+option(SPRAY_ENABLE_DUCO "Build DUCO SDK controller adapter." OFF)
+set(SPRAY_DUCO_INCLUDE_DIR "" CACHE PATH "DUCO SDK include directory")
+set(SPRAY_DUCO_LIBRARY "" CACHE FILEPATH "DUCO SDK library")
+
 find_package(Qt6 REQUIRED COMPONENTS Core Network Test)
 
 enable_testing()
@@ -26,8 +30,18 @@ set(SPRAY_COMMON_SOURCES
     src/protocol/ByteCodec.cpp
     src/protocol/CameraProtocol.cpp
     src/protocol/PlcProtocol.cpp
+    src/robot/duco/DucoClientFactory.cpp
+    src/robot/duco/DucoClient.cpp
+    src/robot/duco/DucoRobotController.cpp
     src/robot/FakeRobotController.cpp
+    src/robot/IRobotController.cpp
 )
+
+if(SPRAY_ENABLE_DUCO)
+    if(NOT SPRAY_DUCO_INCLUDE_DIR OR NOT SPRAY_DUCO_LIBRARY)
+        message(FATAL_ERROR "SPRAY_ENABLE_DUCO requires SPRAY_DUCO_INCLUDE_DIR and SPRAY_DUCO_LIBRARY")
+    endif()
+endif()
 
 qt_add_executable(spray_control
     src/app/main.cpp
@@ -36,13 +50,20 @@ qt_add_executable(spray_control
 
 target_include_directories(spray_control PRIVATE src)
 target_link_libraries(spray_control PRIVATE Qt6::Core Qt6::Network)
+target_compile_definitions(spray_control PRIVATE SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>)
+if(SPRAY_ENABLE_DUCO)
+    target_include_directories(spray_control PRIVATE ${SPRAY_DUCO_INCLUDE_DIR})
+    target_link_libraries(spray_control PRIVATE ${SPRAY_DUCO_LIBRARY})
+endif()
 set_target_properties(spray_control PROPERTIES WIN32_EXECUTABLE FALSE)
 
 qt_add_executable(spray_tests
     tests/test_main.cpp
+    tests/test_app_config.cpp
     tests/test_application_loop.cpp
     tests/test_camera_endpoint.cpp
     tests/test_camera_protocol.cpp
+    tests/test_duco_robot_controller.cpp
     tests/test_enqueue_workflow.cpp
     tests/test_fake_robot_loop.cpp
     tests/test_legacy_camera_workflow.cpp
@@ -54,6 +75,11 @@ qt_add_executable(spray_tests
 
 target_include_directories(spray_tests PRIVATE src)
 target_link_libraries(spray_tests PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+target_compile_definitions(spray_tests PRIVATE SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>)
+if(SPRAY_ENABLE_DUCO)
+    target_include_directories(spray_tests PRIVATE ${SPRAY_DUCO_INCLUDE_DIR})
+    target_link_libraries(spray_tests PRIVATE ${SPRAY_DUCO_LIBRARY})
+endif()
 set_target_properties(spray_tests PROPERTIES WIN32_EXECUTABLE FALSE)
 
 add_test(NAME spray_tests COMMAND spray_tests)

@@ -12,6 +12,15 @@ enabled = true
 accept_delay_ms = 20
 finish_delay_ms = 80
 
+[robot]
+mode = "fake"
+ip = "127.0.0.1"
+port = 7003
+heartbeat_ms = 1000
+prepare_on_start = false
+auto_power_on = true
+auto_enable = true
+
 [camera]
 host = "0.0.0.0"
 camera2d_port = 9001

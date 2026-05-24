@@ -1,6 +1,8 @@
+#include "test_app_config.h"
 #include "test_application_loop.h"
 #include "test_camera_endpoint.h"
 #include "test_camera_protocol.h"
+#include "test_duco_robot_controller.h"
 #include "test_enqueue_workflow.h"
 #include "test_fake_robot_loop.h"
 #include "test_legacy_camera_workflow.h"
@@ -35,9 +37,11 @@ int main(int argc, char** argv)
     QDir().mkpath(QStringLiteral("test-output"));
     int status = 0;
 
+    status |= runTest(createAppConfigTest(), QStringLiteral("app-config.txt"));
     status |= runTest(createApplicationLoopTest(), QStringLiteral("application-loop.txt"));
     status |= runTest(createCameraEndpointTest(), QStringLiteral("camera-endpoint.txt"));
     status |= runTest(createCameraProtocolTest(), QStringLiteral("camera-protocol.txt"));
+    status |= runTest(createDucoRobotControllerTest(), QStringLiteral("duco-robot-controller.txt"));
     status |= runTest(createEnqueueWorkflowTest(), QStringLiteral("enqueue-workflow.txt"));
     status |= runTest(createFakeRobotLoopTest(), QStringLiteral("fake-robot-loop.txt"));
     status |= runTest(createLegacyCameraWorkflowTest(), QStringLiteral("legacy-camera-workflow.txt"));

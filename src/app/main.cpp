@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
         return 2;
     }
 
-    const bool simulateRobot = commandLine.simulateRobot || config.fakeRobot.enabled;
+    const bool simulateRobot = commandLine.simulateRobot || config.robot.mode == spray::config::RobotMode::Fake;
 
     QTextStream out(stdout);
     out << "spray_control starting\n";

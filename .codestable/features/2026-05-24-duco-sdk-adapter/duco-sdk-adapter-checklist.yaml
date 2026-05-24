@@ -1,0 +1,63 @@
+feature: 2026-05-24-duco-sdk-adapter
+created: 2026-05-24
+
+steps:
+  - action: "契约骨架：抽出 IRobotController 并让 fake robot 走同一契约"
+    exit_signal: "现有 fake 出队闭环测试不改外部行为仍通过。"
+    status: done
+  - action: "配置和编译开关：增加 robot 配置、DUCO SDK 可选构建入口"
+    exit_signal: "未启用 SDK 时本地仍可完整构建。"
+    status: done
+  - action: "DUCO seam：建立 role client factory 和可测试 wrapper"
+    exit_signal: "测试能证明 heartbeat/control/status/motion 不是同一对象。"
+    status: done
+  - action: "DUCO lifecycle：实现 connect、prepare、disconnect、fault 状态"
+    exit_signal: "open/power_on/enable/readStatus 顺序可观察，失败路径可观察。"
+    status: done
+  - action: "任务控制与状态：实现 stop/pause/resume/readStatus，接入 warning/statusChanged"
+    exit_signal: "控制命令不阻塞 PLC socket 回调，错误返回不误发 XD。"
+    status: done
+  - action: "回归覆盖：补齐 fake、配置、DUCO seam、错误路径测试"
+    exit_signal: "spray_tests.exe 通过，缺 SDK 环境仍通过。"
+    status: done
+
+checks:
+  - item: "IRobotController 暴露 connectRobot、disconnectRobot、prepare、enqueueTask、stop、pause、resume、readStatus 以及统一任务/状态/告警信号"
+    source: 名词契约
+    status: passed
+  - item: "DequeueCoordinator 只依赖 IRobotController，不直接依赖 FakeRobotController 或 DucoCobot"
+    source: 编排骨架
+    status: passed
+  - item: "DUCO prepare 顺序为 open role clients -> heartbeat -> power_on(true) -> enable(true) -> readStatus"
+    source: 流程级约束
+    status: passed
+  - item: "heartbeat/control/status/motion role 使用不同 DUCO client 实例"
+    source: 流程级约束
+    status: passed
+  - item: "CMake option SPRAY_ENABLE_DUCO 默认关闭，缺 SDK 时 fake 构建不受影响"
+    source: 挂载点
+    status: passed
+  - item: "新增 robot 配置段包含 mode、ip、port、heartbeat、prepare 行为"
+    source: 挂载点
+    status: passed
+  - item: "Application 根据配置在 fake 和 DUCO controller 之间选择实现，并接入 robot lifecycle"
+    source: 挂载点
+    status: passed
+  - item: "不新增相机 payload 到运动段解析，不执行真实 movej_pose2/movel 路径"
+    source: 范围守护
+    status: passed
+  - item: "不修改 PLC 9999/9090 或相机 legacy/dual camera 外部报文"
+    source: 范围守护
+    status: passed
+  - item: "不新增 Qt Widgets、QModbusTcpClient 或旧 data/1 机械臂 TCP 协议"
+    source: 范围守护
+    status: passed
+  - item: "SDK disabled 构建和测试通过"
+    source: 验收场景
+    status: passed
+  - item: "fake controller 仍按 accepted -> XN、finished -> XD 顺序反馈"
+    source: 验收场景
+    status: passed
+  - item: "DUCO 返回 -1 时进入 faulted，发 warning，不发送虚假的 XD"
+    source: 验收场景
+    status: passed

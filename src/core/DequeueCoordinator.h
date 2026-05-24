@@ -2,7 +2,7 @@
 
 #include "core/QueueManager.h"
 #include "io/plc/PlcEndpoint.h"
-#include "robot/FakeRobotController.h"
+#include "robot/IRobotController.h"
 
 #include <QObject>
 
@@ -14,7 +14,7 @@ class DequeueCoordinator final : public QObject {
 public:
     DequeueCoordinator(QueueManager* queueManager,
                        io::PlcEndpoint* plcEndpoint,
-                       robot::FakeRobotController* robot,
+                       robot::IRobotController* robot,
                        QObject* parent = nullptr);
 
 public slots:
@@ -29,7 +29,7 @@ signals:
 private:
     QueueManager* queueManager_ = nullptr;
     io::PlcEndpoint* plcEndpoint_ = nullptr;
-    robot::FakeRobotController* robot_ = nullptr;
+    robot::IRobotController* robot_ = nullptr;
 };
 
 } // namespace spray::core

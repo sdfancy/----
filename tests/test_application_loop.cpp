@@ -154,6 +154,19 @@ private slots:
 
         app.stop();
     }
+
+    void ducoModeWithoutSdkFailsStart()
+    {
+        AppConfig config;
+        config.robot.mode = spray::config::RobotMode::Duco;
+
+        Application app(config, false);
+        QString error;
+
+        QVERIFY2(app.initialize(&error), qPrintable(error));
+        QVERIFY(!app.start(&error));
+        QCOMPARE(error, QStringLiteral("DUCO open failed"));
+    }
 };
 
 QObject* createApplicationLoopTest()

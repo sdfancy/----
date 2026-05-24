@@ -57,6 +57,18 @@ CameraFlowMode parseCameraFlowMode(const QString& value, CameraFlowMode fallback
     return fallback;
 }
 
+RobotMode parseRobotMode(const QString& value, RobotMode fallback)
+{
+    const QString lowered = unquote(value).trimmed().toLower();
+    if (lowered == QStringLiteral("fake")) {
+        return RobotMode::Fake;
+    }
+    if (lowered == QStringLiteral("duco")) {
+        return RobotMode::Duco;
+    }
+    return fallback;
+}
+
 CameraCorrelationMode parseCameraCorrelationMode(const QString& value, CameraCorrelationMode fallback)
 {
     const QString lowered = unquote(value).trimmed().toLower();
@@ -151,6 +163,22 @@ AppConfig AppConfig::load(const QString& path, QString* errorMessage)
             } else if (key == QStringLiteral("finish_delay_ms")) {
                 config.fakeRobot.finishDelayMs = parseInt(value, config.fakeRobot.finishDelayMs);
             }
+        } else if (section == QStringLiteral("robot")) {
+            if (key == QStringLiteral("mode")) {
+                config.robot.mode = parseRobotMode(value, config.robot.mode);
+            } else if (key == QStringLiteral("ip")) {
+                config.robot.ip = unquote(value);
+            } else if (key == QStringLiteral("port")) {
+                config.robot.port = static_cast<quint16>(parseInt(value, config.robot.port));
+            } else if (key == QStringLiteral("heartbeat_ms")) {
+                config.robot.heartbeatMs = parseInt(value, config.robot.heartbeatMs);
+            } else if (key == QStringLiteral("prepare_on_start")) {
+                config.robot.prepareOnStart = parseBool(value, config.robot.prepareOnStart);
+            } else if (key == QStringLiteral("auto_power_on")) {
+                config.robot.autoPowerOn = parseBool(value, config.robot.autoPowerOn);
+            } else if (key == QStringLiteral("auto_enable")) {
+                config.robot.autoEnable = parseBool(value, config.robot.autoEnable);
+            }
         } else if (section == QStringLiteral("camera")) {
             if (key == QStringLiteral("host")) {
                 config.camera.host = unquote(value);
@@ -198,6 +226,12 @@ bool AppConfig::validate(QString* errorMessage) const
     if (fakeRobot.acceptDelayMs < 0 || fakeRobot.finishDelayMs < 0) {
         if (errorMessage) {
             *errorMessage = QStringLiteral("fake robot delays must be >= 0");
+        }
+        return false;
+    }
+    if (robot.port == 0 || robot.heartbeatMs <= 0 || robot.ip.trimmed().isEmpty()) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("robot config is invalid");
         }
         return false;
     }

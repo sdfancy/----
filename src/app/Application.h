@@ -9,6 +9,7 @@
 #include "io/camera/CameraEndpoint.h"
 #include "io/plc/PlcEndpoint.h"
 #include "robot/FakeRobotController.h"
+#include "robot/IRobotController.h"
 
 #include <QObject>
 #include <memory>
@@ -42,7 +43,7 @@ private:
     std::unique_ptr<core::QueueManager> queueManager_;
     std::unique_ptr<io::PlcEndpoint> plcEndpoint_;
     std::unique_ptr<io::CameraEndpoint> cameraEndpoint_;
-    std::unique_ptr<robot::FakeRobotController> fakeRobot_;
+    std::unique_ptr<robot::IRobotController> robot_;
     std::unique_ptr<core::DequeueCoordinator> dequeueCoordinator_;
     std::unique_ptr<core::EnqueueWorkflow> enqueueWorkflow_;
     std::unique_ptr<core::LegacyCameraWorkflow> legacyCameraWorkflow_;

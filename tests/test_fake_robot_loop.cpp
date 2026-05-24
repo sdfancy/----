@@ -1,6 +1,7 @@
 #include "test_fake_robot_loop.h"
 
 #include "core/DequeueCoordinator.h"
+#include "robot/FakeRobotController.h"
 
 #include <QTcpSocket>
 #include <QtTest/QtTest>

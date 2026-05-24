@@ -21,8 +21,8 @@ items:
   - slug: duco-sdk-adapter
     description: 封装 DUCO C++ 远程 API，完成连接、心跳、上电使能、状态读取和任务控制
     depends_on: [cpp-minimal-loop]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-duco-sdk-adapter
     minimal_loop: false
     notes: 需要现场 SDK include/lib 和控制器版本
 
