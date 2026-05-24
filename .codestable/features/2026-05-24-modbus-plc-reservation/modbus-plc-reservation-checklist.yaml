@@ -1,0 +1,60 @@
+feature: 2026-05-24-modbus-plc-reservation
+created: 2026-05-24
+
+steps:
+  - action: "配置契约：补 ModbusConfig、默认 disabled、配置解析和校验"
+    exit_signal: "禁用默认值和非法端口/timeout/retry 有测试。"
+    status: done
+  - action: "地址表：实现 ModbusNode、ModbusAddressTable 和示例空表"
+    exit_signal: "合法节点、重复 name、非法地址、不可写节点校验可观察。"
+    status: done
+  - action: "客户端 seam：封装可选 QModbusTcpClient transport behind interface，保留 fake reply 测试入口"
+    exit_signal: "无真实 PLC 时可测试 disabled/not connected/permission denied。"
+    status: done
+  - action: "读写 API：实现 holding registers 和 coil 的异步读写编排"
+    exit_signal: "请求类型、slaveId、address、count、values 可被 fake 记录。"
+    status: done
+  - action: "范围守护：复跑 PLC、相机、DUCO/fake 测试并 grep 主流程"
+    exit_signal: "9999/9090、相机流程、DUCO 执行路径未变。"
+    status: done
+
+checks:
+  - item: "ModbusConfig 包含 enabled、host、port、defaultSlaveId、timeoutMs、retries、addressTablePath，默认 enabled=false"
+    source: 名词契约
+    status: passed
+  - item: "禁用状态下不创建连接、不轮询、不写 PLC，API 返回 disabled"
+    source: 流程级约束
+    status: passed
+  - item: "CMake 提供 SPRAY_ENABLE_MODBUS，可选查找并链接 Qt6::SerialBus，Qt 相关类型只在 Modbus 客户端实现层暴露"
+    source: 挂载点
+    status: passed
+  - item: "ModbusNode 支持 name、type、slaveId、address、count、writable、description"
+    source: 名词契约
+    status: passed
+  - item: "ModbusAddressTable 支持 load、node、validate，空表允许，重复 name 和非法地址可观察"
+    source: 名词契约
+    status: passed
+  - item: "PlcModbusClient 提供 connectToPlc、disconnectFromPlc、readHoldingRegisters、writeHoldingRegisters、writeCoil"
+    source: 名词契约
+    status: passed
+  - item: "readNode/writeNode 按地址表名称读写，并拒绝 writable=false 节点"
+    source: 编排骨架
+    status: passed
+  - item: "读写请求异步完成，不阻塞 PLC/camera socket 回调或 robot worker"
+    source: 流程级约束
+    status: passed
+  - item: "Modbus 不调用 QueueManager、DequeueCoordinator 或 IRobotController"
+    source: 范围守护
+    status: passed
+  - item: "PlcEndpoint 不 include 或持有 PlcModbusClient，9999/9090 主流程保持独立"
+    source: 范围守护
+    status: passed
+  - item: "业务代码不硬编码 Smart200 地址表，地址来自 config/modbus_nodes.toml 或等价配置"
+    source: 范围守护
+    status: passed
+  - item: "连接异常、timeout、protocol exception 返回 ModbusError 并记录 diagnostics"
+    source: 验收场景
+    status: passed
+  - item: "不新增 HMI 页面、自动轮询业务策略或通过 Modbus 触发 DUCO motion"
+    source: 范围守护
+    status: passed

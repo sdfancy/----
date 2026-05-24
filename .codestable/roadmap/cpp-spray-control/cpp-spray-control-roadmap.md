@@ -210,7 +210,7 @@ RobotSnapshot robotSnapshot(int armId)
 3. **duco-sdk-adapter**（done，feature `2026-05-24-duco-sdk-adapter`）— 封装 DUCO C++ 远程 API、连接、心跳、上电使能、状态读取和任务控制。
 4. **duco-task-executor**（done，feature `2026-05-24-duco-task-executor`）— 把队列 payload 转成喷涂任务并调用 DUCO 运动接口执行。
 5. **qt-hmi-shell**（done，feature `2026-05-24-qt-hmi-shell`）— Qt Widgets HMI 页面、表格模型、设备状态和操作命令设计方案。
-6. **modbus-plc-reservation** — Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留。
+6. **modbus-plc-reservation**（done，feature `2026-05-24-modbus-plc-reservation`）— Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留。
 7. **diagnostics-and-logs** — 原始通讯日志、事件历史、健康检查、错误码和测试模拟器。
 8. **field-config-and-recipes** — 现场配置、机械臂 recipe、点位字段映射、喷枪 IO 和速度参数。
 9. **hardware-acceptance** — 真实 PLC、相机、新松机械臂联调验收脚本和现场 checklist。
@@ -237,3 +237,4 @@ RobotSnapshot robotSnapshot(int armId)
 - 2026-05-24：完成 `duco-sdk-adapter`，机械臂控制契约和 DUCO SDK 适配骨架进入 done。
 - 2026-05-24：完成 `duco-task-executor`，队列 payload 到 DUCO 运动段规划和执行基础进入 done。
 - 2026-05-24：完成 `qt-hmi-shell` design-only 方案，Qt HMI 页面、快照模型和命令边界进入 done。
+- 2026-05-24：完成 `modbus-plc-reservation`，Smart200 Modbus TCP 旁路客户端、地址表和默认禁用边界进入 done。

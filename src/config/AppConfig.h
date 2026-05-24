@@ -69,6 +69,16 @@ struct LoggingConfig {
     bool rawFrames = true;
 };
 
+struct ModbusConfig {
+    bool enabled = false;
+    QString host = QStringLiteral("127.0.0.1");
+    quint16 port = 502;
+    int defaultSlaveId = 1;
+    int timeoutMs = 1000;
+    int retries = 3;
+    QString addressTablePath = QStringLiteral("config/modbus_nodes.toml");
+};
+
 struct AppConfig {
     PlcConfig plc;
     QueueConfig queue;
@@ -76,6 +86,7 @@ struct AppConfig {
     RobotConfig robot;
     CameraConfig camera;
     LoggingConfig logging;
+    ModbusConfig modbus;
 
     static AppConfig defaults();
     static AppConfig load(const QString& path, QString* errorMessage = nullptr);

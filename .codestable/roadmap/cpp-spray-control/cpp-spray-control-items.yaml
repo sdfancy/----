@@ -45,8 +45,8 @@ items:
   - slug: modbus-plc-reservation
     description: Smart200 Modbus TCP 客户端、地址表配置和读写 API 预留
     depends_on: [cpp-minimal-loop]
-    status: planned
-    feature: null
+    status: done
+    feature: 2026-05-24-modbus-plc-reservation
     minimal_loop: false
     notes: 默认禁用，不改变现有 PLC TCP 主流程
 

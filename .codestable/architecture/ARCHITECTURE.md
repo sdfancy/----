@@ -11,6 +11,9 @@
 
 - PLC 入队通道：PLC 连接软件 `9999`，发送入队命令。
 - PLC 出队通道：PLC 连接软件 `9090`，发送双机械臂出队指针，软件在同通道回 `1N/1D/2N/2D`。
+- Modbus sidecar：独立于 `PlcEndpoint` 的 Smart200 Modbus TCP 旁路客户端，默认禁用。
+- AddressTable：`config/modbus_nodes.toml` 中的 Modbus 节点表，保存 name、type、slaveId、address、count、writable、description。
+- PlcModbusClient：`io/plc` 下封装 Modbus 连接和读写 API 的客户端；后续 HMI/规则引擎通过它访问 Modbus，不直接访问 Qt SerialBus。
 - 队列项：由同一 count/pointer 创建的 arm1/arm2 双队列数据。
 - 出队缓存：PLC 指针变化后，为某个机械臂准备的待执行数据。
 - 相机入队流程：PLC 入队命令触发 legacy 单相机或 dual camera 流程，相机 payload 写入队列项。
@@ -33,6 +36,7 @@
 - 已落地相机入队 parity：`app -> io/plc + io/camera -> core workflow -> QueueManager -> PLC enqueue feedback`
 - 已落地 DUCO SDK 适配骨架：`app -> robot::IRobotController -> robot/duco role clients`
 - 已落地 DUCO 任务执行基础：`QueueManager raw payload -> MotionPlanner -> DucoMotionWorker -> DUCO motion client -> XN/XD`
+- 已落地 Modbus 旁路预留：`config -> ModbusAddressTable -> PlcModbusClient -> optional Qt SerialBus transport`
 - 相机协议说明：`.codestable/architecture/protocol-camera.md`
 
 ### 3.1 已落地最小闭环
@@ -68,6 +72,15 @@
 - `robot/duco`：`DucoMotionWorker` 只使用 motion client 执行阻塞 motion/IO；任一段返回 `-1` 时尝试关闭已打开喷枪 IO，并让 controller 进入 faulted。
 - `core`：`DequeueCoordinator` 只在 `taskFinished(ok=true)` 时 mark done 并发 `XD`；`ok=false` 不发送正常完成反馈。
 
+### 3.5 已落地 Modbus 旁路预留
+
+- `config`：`ModbusConfig` 表达 enabled、host、port、defaultSlaveId、timeoutMs、retries 和 addressTablePath；默认 `enabled=false`。
+- `io/plc`：`ModbusAddressTable` 加载和校验 `config/modbus_nodes.toml`，允许空表，拒绝重复 name、非法 slave/address/count 和非单点 coil。
+- `io/plc`：`PlcModbusClient` 提供 `connectToPlc`、`disconnectFromPlc`、`readHoldingRegisters`、`writeHoldingRegisters`、`writeCoil`、`readNode`、`writeNode`。
+- `io/plc`：`SPRAY_ENABLE_MODBUS=OFF` 时不要求 Qt SerialBus；启用后才链接 `Qt6::SerialBus` 并使用 `QModbusTcpClient`。
+- `io/plc`：禁用、未连接、非法地址、只读节点、协议异常和超时都返回 `ModbusError`；客户端发 `warning` 信号供 diagnostics/HMI 记录。
+- `io/plc`：Modbus 不挂入 `PlcEndpoint`，不参与 PLC `9999/9090` 入队、出队、反馈链路。
+
 ## 4. 关键架构决定
 
 - 当前阶段不修改 PLC 与相机外部通讯流程。
@@ -77,6 +90,7 @@
 - `core::RobotTask` 保留 raw payload，payload 解析、运动规划、recipe 校验和 DUCO motion 调用都在 robot 层完成。
 - `taskFinished(ok=false)` 代表任务失败或安全拒绝，不得发送正常 `XD`；当前不新增 PLC 错误反馈码。
 - HMI 建议使用 Qt Widgets；通讯层使用 Qt Network，预留 Modbus 使用 Qt SerialBus。
+- Modbus 是默认禁用的旁路能力；Smart200 地址只能来自地址表配置，不能写入业务代码。
 
 ## 5. 已知约束 / 硬边界
 
@@ -87,5 +101,6 @@
 - DUCO API 多线程调用必须隔离对象：阻塞运动、任务控制、心跳不得共享同一个 `DucoCobot` 对象。
 - DUCO `open()` 未成功前禁止上电、使能、任务控制和运动；任一 DUCO 调用返回 `-1` 进入 faulted 并发 warning，不伪造成任务完成。
 - 非默认 DUCO 任务没有有效 `MotionRecipe` 时必须拒绝执行；现场 recipe 文件、真实字段映射和喷枪接线由后续 `field-config-and-recipes` 完成。
-- 当前已接入 PLC、相机入队流程、DUCO 适配骨架和 DUCO 任务执行基础；仍不包含 Qt Widgets、Modbus、完整现场 recipe 管理和真实硬件验收。
+- `PlcEndpoint` 不 include 或持有 `PlcModbusClient`；Modbus 写入不得触发队列、相机流程或 DUCO motion。
+- 当前已接入 PLC、相机入队流程、DUCO 适配骨架、DUCO 任务执行基础和 Modbus 旁路预留；仍不包含 Qt Widgets、完整现场 recipe 管理和真实硬件验收。
 - Windows/Qt MinGW 构建在中文源码路径下不能把构建目录放在项目内，Qt `moc` 会失败；使用 ASCII 构建目录。

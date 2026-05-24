@@ -45,6 +45,16 @@ int parseInt(const QString& value, int fallback)
     return ok ? parsed : fallback;
 }
 
+quint16 parseU16(const QString& value, quint16 fallback)
+{
+    bool ok = false;
+    const int parsed = value.trimmed().toInt(&ok);
+    if (!ok || parsed < 0 || parsed > 65535) {
+        return fallback;
+    }
+    return static_cast<quint16>(parsed);
+}
+
 CameraFlowMode parseCameraFlowMode(const QString& value, CameraFlowMode fallback)
 {
     const QString lowered = unquote(value).trimmed().toLower();
@@ -203,6 +213,22 @@ AppConfig AppConfig::load(const QString& path, QString* errorMessage)
             if (key == QStringLiteral("raw_frames")) {
                 config.logging.rawFrames = parseBool(value, config.logging.rawFrames);
             }
+        } else if (section == QStringLiteral("modbus")) {
+            if (key == QStringLiteral("enabled")) {
+                config.modbus.enabled = parseBool(value, config.modbus.enabled);
+            } else if (key == QStringLiteral("host")) {
+                config.modbus.host = unquote(value);
+            } else if (key == QStringLiteral("port")) {
+                config.modbus.port = parseU16(value, config.modbus.port);
+            } else if (key == QStringLiteral("default_slave_id")) {
+                config.modbus.defaultSlaveId = parseInt(value, config.modbus.defaultSlaveId);
+            } else if (key == QStringLiteral("timeout_ms")) {
+                config.modbus.timeoutMs = parseInt(value, config.modbus.timeoutMs);
+            } else if (key == QStringLiteral("retries")) {
+                config.modbus.retries = parseInt(value, config.modbus.retries);
+            } else if (key == QStringLiteral("address_table")) {
+                config.modbus.addressTablePath = unquote(value);
+            }
         }
     }
 
@@ -245,6 +271,17 @@ bool AppConfig::validate(QString* errorMessage) const
         && (camera.camera3dPort == 0 || camera.camera3dPort == camera.camera2dPort)) {
         if (errorMessage) {
             *errorMessage = QStringLiteral("camera 2D/3D ports must be non-zero and different");
+        }
+        return false;
+    }
+    if (modbus.port == 0
+        || modbus.defaultSlaveId <= 0
+        || modbus.defaultSlaveId > 247
+        || modbus.timeoutMs <= 0
+        || modbus.retries < 0
+        || modbus.host.trimmed().isEmpty()) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("modbus config is invalid");
         }
         return false;
     }

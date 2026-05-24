@@ -34,3 +34,12 @@ camera_count_extract_mode = "auto"
 
 [logging]
 raw_frames = true
+
+[modbus]
+enabled = false
+host = "127.0.0.1"
+port = 502
+default_slave_id = 1
+timeout_ms = 1000
+retries = 3
+address_table = "config/modbus_nodes.toml"

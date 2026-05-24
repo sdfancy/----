@@ -9,10 +9,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 option(SPRAY_ENABLE_DUCO "Build DUCO SDK controller adapter." OFF)
+option(SPRAY_ENABLE_MODBUS "Build Qt SerialBus Modbus TCP client transport." OFF)
 set(SPRAY_DUCO_INCLUDE_DIR "" CACHE PATH "DUCO SDK include directory")
 set(SPRAY_DUCO_LIBRARY "" CACHE FILEPATH "DUCO SDK library")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network Test)
+if(SPRAY_ENABLE_MODBUS)
+    find_package(Qt6 REQUIRED COMPONENTS SerialBus)
+endif()
 
 enable_testing()
 
@@ -26,6 +30,8 @@ set(SPRAY_COMMON_SOURCES
     src/core/QueueManager.cpp
     src/diagnostics/EventLog.cpp
     src/io/camera/CameraEndpoint.cpp
+    src/io/plc/ModbusAddressTable.cpp
+    src/io/plc/PlcModbusClient.cpp
     src/io/plc/PlcEndpoint.cpp
     src/protocol/ByteCodec.cpp
     src/protocol/CameraProtocol.cpp
@@ -52,7 +58,12 @@ qt_add_executable(spray_control
 
 target_include_directories(spray_control PRIVATE src)
 target_link_libraries(spray_control PRIVATE Qt6::Core Qt6::Network)
-target_compile_definitions(spray_control PRIVATE SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>)
+target_compile_definitions(spray_control PRIVATE
+    SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>
+    SPRAY_ENABLE_MODBUS=$<BOOL:${SPRAY_ENABLE_MODBUS}>)
+if(SPRAY_ENABLE_MODBUS)
+    target_link_libraries(spray_control PRIVATE Qt6::SerialBus)
+endif()
 if(SPRAY_ENABLE_DUCO)
     target_include_directories(spray_control PRIVATE ${SPRAY_DUCO_INCLUDE_DIR})
     target_link_libraries(spray_control PRIVATE ${SPRAY_DUCO_LIBRARY})
@@ -69,8 +80,10 @@ qt_add_executable(spray_tests
     tests/test_enqueue_workflow.cpp
     tests/test_fake_robot_loop.cpp
     tests/test_legacy_camera_workflow.cpp
+    tests/test_modbus_address_table.cpp
     tests/test_motion_planner.cpp
     tests/test_plc_endpoint.cpp
+    tests/test_plc_modbus_client.cpp
     tests/test_plc_protocol.cpp
     tests/test_queue_manager.cpp
     ${SPRAY_COMMON_SOURCES}
@@ -78,7 +91,12 @@ qt_add_executable(spray_tests
 
 target_include_directories(spray_tests PRIVATE src)
 target_link_libraries(spray_tests PRIVATE Qt6::Core Qt6::Network Qt6::Test)
-target_compile_definitions(spray_tests PRIVATE SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>)
+target_compile_definitions(spray_tests PRIVATE
+    SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>
+    SPRAY_ENABLE_MODBUS=$<BOOL:${SPRAY_ENABLE_MODBUS}>)
+if(SPRAY_ENABLE_MODBUS)
+    target_link_libraries(spray_tests PRIVATE Qt6::SerialBus)
+endif()
 if(SPRAY_ENABLE_DUCO)
     target_include_directories(spray_tests PRIVATE ${SPRAY_DUCO_INCLUDE_DIR})
     target_link_libraries(spray_tests PRIVATE ${SPRAY_DUCO_LIBRARY})

@@ -55,6 +55,49 @@ auto_enable = false
         QVERIFY(!config.validate(&error));
         QCOMPARE(error, QStringLiteral("robot config is invalid"));
     }
+
+    void parsesModbusConfig()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+
+        const QString path = dir.filePath(QStringLiteral("config.toml"));
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Text));
+        file.write(R"toml(
+[modbus]
+enabled = true
+host = "192.168.1.20"
+port = 502
+default_slave_id = 2
+timeout_ms = 1500
+retries = 2
+address_table = "config/site_modbus.toml"
+)toml");
+        file.close();
+
+        QString error;
+        const auto config = AppConfig::load(path, &error);
+        QVERIFY2(error.isEmpty(), qPrintable(error));
+        QVERIFY(config.modbus.enabled);
+        QCOMPARE(config.modbus.host, QStringLiteral("192.168.1.20"));
+        QCOMPARE(config.modbus.port, 502);
+        QCOMPARE(config.modbus.defaultSlaveId, 2);
+        QCOMPARE(config.modbus.timeoutMs, 1500);
+        QCOMPARE(config.modbus.retries, 2);
+        QCOMPARE(config.modbus.addressTablePath, QStringLiteral("config/site_modbus.toml"));
+        QVERIFY(config.validate(&error));
+    }
+
+    void rejectsInvalidModbusConfig()
+    {
+        auto config = AppConfig::defaults();
+        config.modbus.timeoutMs = 0;
+
+        QString error;
+        QVERIFY(!config.validate(&error));
+        QCOMPARE(error, QStringLiteral("modbus config is invalid"));
+    }
 };
 
 QObject* createAppConfigTest()
