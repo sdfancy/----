@@ -15,3 +15,4 @@ compile_commands.json
 test-output/
 out.txt
 test_result.txt
+.ace-tool/

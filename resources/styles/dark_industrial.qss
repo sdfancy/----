@@ -31,8 +31,10 @@ QHeaderView::section {
 /* 卡片容器样式 (DeviceCardWidget 内部) */
 QWidget#CardBackground {
     background-color: #24283b;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid #292e42;
+    padding: 10px;
+    margin: 5px;
 }
 
 /* 按钮样式 */
@@ -69,4 +71,25 @@ QPushButton#BtnStart {
 }
 QPushButton#BtnStart:hover {
     background-color: #73daca;
+}
+
+/* 侧边导航栏 */
+QListWidget#Sidebar {
+    background-color: #16161E;
+    border: none;
+    border-right: 1px solid #292e42;
+    padding-top: 10px;
+}
+QListWidget#Sidebar::item {
+    padding: 10px 15px;
+    color: #a9b1d6;
+}
+QListWidget#Sidebar::item:hover {
+    background-color: #1f2335;
+    color: #c0caf5;
+}
+QListWidget#Sidebar::item:selected {
+    background-color: #24283b;
+    color: #7aa2f7;
+    border-left: 3px solid #7aa2f7;
 }

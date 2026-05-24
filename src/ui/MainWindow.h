@@ -4,6 +4,7 @@
 #include <memory>
 
 class QStackedWidget;
+class QListWidget;
 
 namespace spray::domain {
 struct SystemSnapshot;
@@ -32,6 +33,7 @@ private:
     std::shared_ptr<SnapshotProvider> m_snapshotProvider;
     std::shared_ptr<HmiCommandPort> m_commandPort;
 
+    QListWidget* m_sidebar;
     QStackedWidget* m_pageStack;
     OverviewPage* m_overviewPage;
 };

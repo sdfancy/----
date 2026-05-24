@@ -8,6 +8,7 @@ namespace spray::ui {
 DeviceCardWidget::DeviceCardWidget(const QString& title, QWidget* parent)
     : QWidget(parent)
 {
+    setAttribute(Qt::WA_StyledBackground, true);
     setObjectName("CardBackground");
 
     m_lblTitle = new QLabel(title, this);

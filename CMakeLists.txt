@@ -20,6 +20,16 @@ endif()
 
 enable_testing()
 
+function(spray_copy_runtime_files target_name)
+    add_custom_command(TARGET ${target_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/config"
+            "$<TARGET_FILE_DIR:${target_name}>/config"
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_FILE_DIR:${target_name}>/logs"
+        VERBATIM)
+endfunction()
+
 set(SPRAY_UI_SOURCES
     src/ui/ApplicationHmiRunner.cpp
     src/ui/MainWindow.cpp
@@ -28,6 +38,7 @@ set(SPRAY_UI_SOURCES
     src/ui/components/DeviceCardWidget.cpp
     src/ui/components/FlowMonitorWidget.cpp
     src/ui/models/QueueTableModel.cpp
+    src/ui/models/EventLogTableModel.cpp
     src/ui/pages/OverviewPage.cpp
 )
 qt_add_resources(UI_RESOURCES resources/ui.qrc)
@@ -93,6 +104,27 @@ if(SPRAY_ENABLE_DUCO)
     target_link_libraries(spray_control PRIVATE ${SPRAY_DUCO_LIBRARY})
 endif()
 set_target_properties(spray_control PROPERTIES WIN32_EXECUTABLE FALSE)
+spray_copy_runtime_files(spray_control)
+
+qt_add_executable(spray_hmi
+    src/app/hmi_main.cpp
+    ${SPRAY_COMMON_SOURCES}
+)
+
+target_include_directories(spray_hmi PRIVATE src)
+target_link_libraries(spray_hmi PRIVATE Qt6::Core Qt6::Network Qt6::Widgets Qt6::Gui SprayHmiShell)
+target_compile_definitions(spray_hmi PRIVATE
+    SPRAY_ENABLE_DUCO=$<BOOL:${SPRAY_ENABLE_DUCO}>
+    SPRAY_ENABLE_MODBUS=$<BOOL:${SPRAY_ENABLE_MODBUS}>)
+if(SPRAY_ENABLE_MODBUS)
+    target_link_libraries(spray_hmi PRIVATE Qt6::SerialBus)
+endif()
+if(SPRAY_ENABLE_DUCO)
+    target_include_directories(spray_hmi PRIVATE ${SPRAY_DUCO_INCLUDE_DIR})
+    target_link_libraries(spray_hmi PRIVATE ${SPRAY_DUCO_LIBRARY})
+endif()
+set_target_properties(spray_hmi PROPERTIES WIN32_EXECUTABLE FALSE)
+spray_copy_runtime_files(spray_hmi)
 
 qt_add_executable(spray_tests
     tests/test_main.cpp
@@ -130,5 +162,6 @@ if(SPRAY_ENABLE_DUCO)
     target_link_libraries(spray_tests PRIVATE ${SPRAY_DUCO_LIBRARY})
 endif()
 set_target_properties(spray_tests PROPERTIES WIN32_EXECUTABLE FALSE)
+spray_copy_runtime_files(spray_tests)
 
 add_test(NAME spray_tests COMMAND spray_tests)

@@ -7,6 +7,8 @@
 #include <QStatusBar>
 #include <QStackedWidget>
 #include <QPushButton>
+#include <QListWidget>
+#include <QHBoxLayout>
 
 namespace spray::ui {
 
@@ -33,7 +35,32 @@ void MainWindow::setupUi()
     m_overviewPage = new OverviewPage(this);
     m_pageStack->addWidget(m_overviewPage);
 
-    setCentralWidget(m_pageStack);
+    m_sidebar = new QListWidget(this);
+    m_sidebar->setObjectName("Sidebar");
+    m_sidebar->setFixedWidth(150);
+    
+    auto* itemOverview = new QListWidgetItem(QIcon(":/hmi/icons/menu_overview.svg"), "总览面板");
+    auto* itemQueue = new QListWidgetItem(QIcon(":/hmi/icons/menu_queue.svg"), "主队列");
+    auto* itemDevice = new QListWidgetItem(QIcon(":/hmi/icons/menu_device.svg"), "设备状态");
+    auto* itemLog = new QListWidgetItem(QIcon(":/hmi/icons/menu_log.svg"), "报警日志");
+    auto* itemConfig = new QListWidgetItem(QIcon(":/hmi/icons/menu_config.svg"), "系统配置");
+
+    m_sidebar->addItem(itemOverview);
+    m_sidebar->addItem(itemQueue);
+    m_sidebar->addItem(itemDevice);
+    m_sidebar->addItem(itemLog);
+    m_sidebar->addItem(itemConfig);
+    
+    m_sidebar->setCurrentRow(0);
+
+    auto* centralWidget = new QWidget(this);
+    auto* mainLayout = new QHBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+    mainLayout->addWidget(m_sidebar);
+    mainLayout->addWidget(m_pageStack, 1);
+
+    setCentralWidget(centralWidget);
 
     statusBar()->showMessage("就绪");
 }

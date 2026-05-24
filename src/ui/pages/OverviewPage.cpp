@@ -2,6 +2,7 @@
 #include "components/DeviceCardWidget.h"
 #include "components/FlowMonitorWidget.h"
 #include "models/QueueTableModel.h"
+#include "models/EventLogTableModel.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -37,24 +38,35 @@ void OverviewPage::setupUi()
 
     mainLayout->addLayout(cardsLayout);
 
-    // Splitter for bottom area
-    auto* splitter = new QSplitter(Qt::Horizontal, this);
+    // Top middle Splitter: Left (Queue Table), Right (Flow Monitor)
+    auto* topSplitter = new QSplitter(Qt::Horizontal, this);
 
-    // Left: Table
     m_queueModel = new QueueTableModel(this);
-    auto* tableView = new QTableView(this);
-    tableView->setModel(m_queueModel);
-    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    splitter->addWidget(tableView);
+    auto* queueTableView = new QTableView(this);
+    queueTableView->setModel(m_queueModel);
+    queueTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    topSplitter->addWidget(queueTableView);
 
-    // Right: Flow Monitor
     m_flowMonitor = new FlowMonitorWidget(this);
-    splitter->addWidget(m_flowMonitor);
+    topSplitter->addWidget(m_flowMonitor);
 
-    splitter->setStretchFactor(0, 3);
-    splitter->setStretchFactor(1, 2);
+    topSplitter->setStretchFactor(0, 3);
+    topSplitter->setStretchFactor(1, 2);
 
-    mainLayout->addWidget(splitter, 1);
+    // Bottom Table (Event Logs)
+    m_logModel = new EventLogTableModel(this);
+    auto* logTableView = new QTableView(this);
+    logTableView->setModel(m_logModel);
+    logTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    
+    // Main Splitter for Vertical Layout (Top: Queue+Flow, Bottom: Logs)
+    auto* mainSplitter = new QSplitter(Qt::Vertical, this);
+    mainSplitter->addWidget(topSplitter);
+    mainSplitter->addWidget(logTableView);
+    mainSplitter->setStretchFactor(0, 2);
+    mainSplitter->setStretchFactor(1, 1);
+
+    mainLayout->addWidget(mainSplitter, 1);
 }
 
 void OverviewPage::applySnapshot(const spray::domain::SystemSnapshot& snapshot)

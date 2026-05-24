@@ -12,6 +12,7 @@ namespace spray::ui {
 class DeviceCardWidget;
 class QueueTableModel;
 class FlowMonitorWidget;
+class EventLogTableModel;
 
 class OverviewPage : public QWidget {
     Q_OBJECT
@@ -31,6 +32,7 @@ private:
 
     QueueTableModel* m_queueModel;
     FlowMonitorWidget* m_flowMonitor;
+    EventLogTableModel* m_logModel;
 };
 
 } // namespace spray::ui

@@ -1,0 +1,76 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "qt-mingw-debug",
+      "displayName": "Qt 6.10 MinGW Debug",
+      "description": "Debug build for Qt Creator. Uses an ASCII build directory to avoid Qt moc issues under Chinese source paths.",
+      "generator": "Ninja",
+      "binaryDir": "C:/Data/Code/spray_control_build_qtcreator_debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.10.2/mingw_64",
+        "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe",
+        "SPRAY_ENABLE_DUCO": "OFF",
+        "SPRAY_ENABLE_MODBUS": "OFF"
+      },
+      "environment": {
+        "PATH": "C:\\Qt\\Tools\\mingw1310_64\\bin;C:\\Qt\\6.10.2\\mingw_64\\bin;$penv{PATH}"
+      }
+    },
+    {
+      "name": "qt-mingw-release",
+      "displayName": "Qt 6.10 MinGW Release",
+      "generator": "Ninja",
+      "binaryDir": "C:/Data/Code/spray_control_build_qtcreator_release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.10.2/mingw_64",
+        "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/Qt/Tools/Ninja/ninja.exe",
+        "SPRAY_ENABLE_DUCO": "OFF",
+        "SPRAY_ENABLE_MODBUS": "OFF"
+      },
+      "environment": {
+        "PATH": "C:\\Qt\\Tools\\mingw1310_64\\bin;C:\\Qt\\6.10.2\\mingw_64\\bin;$penv{PATH}"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "qt-mingw-debug",
+      "configurePreset": "qt-mingw-debug",
+      "targets": [
+        "spray_hmi",
+        "spray_control",
+        "spray_tests"
+      ]
+    },
+    {
+      "name": "qt-mingw-release",
+      "configurePreset": "qt-mingw-release",
+      "targets": [
+        "spray_hmi",
+        "spray_control",
+        "spray_tests"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "qt-mingw-debug",
+      "configurePreset": "qt-mingw-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "qt-mingw-release",
+      "configurePreset": "qt-mingw-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

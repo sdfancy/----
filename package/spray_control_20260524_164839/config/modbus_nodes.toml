@@ -1,0 +1,11 @@
+# Smart200 Modbus address table.
+# Keep disabled/empty until the PLC engineer provides the real address map.
+#
+# [[nodes]]
+# name = "example_holding"
+# type = "holding_register"
+# slave_id = 1
+# address = 400
+# count = 2
+# writable = false
+# description = "Example only; replace with site address table."
